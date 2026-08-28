@@ -1,0 +1,31 @@
+{
+  "package": "Haaglanden Voetbal TournamentOS Codex Handoff",
+  "version": "2026-08-28",
+  "language": "nl-NL",
+  "timezone": "Europe/Amsterdam",
+  "target": "DEV VPS",
+  "pushAuthorized": false,
+  "deployAuthorized": false,
+  "sourceStrategy": "Continue a newer existing VPS repository when present; otherwise scaffold from the packaged requirements and use the legacy static prototype as functional reference.",
+  "requirements": {
+    "totalFeatures": 300,
+    "mvp": 20,
+    "v1": 36
+  },
+  "designDirections": {
+    "public": "Editorial",
+    "bracket": "Tournament Arena",
+    "matchCentre": "Matchday",
+    "clubsCommunity": "Football Network",
+    "dashboards": "HV Next"
+  },
+  "requiredRoles": [
+    "tournament_leadership",
+    "association_manager",
+    "team_manager",
+    "referee"
+  ],
+  "referenceImages": 7,
+  "syntheticDemoDataOnly": true
+}
+

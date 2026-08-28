@@ -1,0 +1,108 @@
+{
+  "meta": {
+    "schemaVersion": 1,
+    "generatedFor": "Haaglanden Voetbal TournamentOS premium demo",
+    "timezone": "Europe/Amsterdam",
+    "syntheticData": true,
+    "resetScenario": "quick-duindorp-qf"
+  },
+  "demoClock": {
+    "defaultNow": "2026-09-12T16:30:00+02:00",
+    "presets": {
+      "preT60": "2026-09-12T18:30:00+02:00",
+      "t60": "2026-09-12T19:00:00+02:00",
+      "live78": "2026-09-12T21:38:00+02:00",
+      "postMatch": "2026-09-12T22:15:00+02:00"
+    }
+  },
+  "roles": [
+    {"id":"role_leadership","label":"Toernooileiding"},
+    {"id":"role_association","label":"Verenigingsmanager"},
+    {"id":"role_team","label":"Teammanager"},
+    {"id":"role_referee","label":"Scheidsrechter"},
+    {"id":"role_supporter","label":"Supporter"}
+  ],
+  "demoUsers": [
+    {"id":"user_leadership","email":"leiding@demo.tournamentos.local","name":"Demo Toernooileiding","roleId":"role_leadership","scopeIds":["tournament_swc_2026"]},
+    {"id":"user_association","email":"vereniging@demo.tournamentos.local","name":"Demo Verenigingsmanager","roleId":"role_association","scopeIds":["club_duindorp"]},
+    {"id":"user_team","email":"team@demo.tournamentos.local","name":"Demo Teammanager","roleId":"role_team","scopeIds":["team_duindorp_1"]},
+    {"id":"user_referee","email":"scheids@demo.tournamentos.local","name":"Demo Scheidsrechter","roleId":"role_referee","scopeIds":["match_qf_1"]},
+    {"id":"user_supporter","email":"supporter@demo.tournamentos.local","name":"Demo Supporter","roleId":"role_supporter","scopeIds":[]}
+  ],
+  "clubs": [
+    {"id":"club_quick","name":"Quick","region":"Den Haag","crest":"/assets/brand/club-placeholder.svg","venue":"Sportpark Nieuw Hanenburg"},
+    {"id":"club_duindorp","name":"Duindorp SV","region":"Den Haag","crest":"/assets/brand/club-placeholder.svg","venue":"Sportpark Houtrust"},
+    {"id":"club_rkavv","name":"RKAVV","region":"Leidschendam-Voorburg","crest":"/assets/brand/club-placeholder.svg","venue":"Sportpark Kastelenring"},
+    {"id":"club_dhc","name":"DHC","region":"Delft","crest":"/assets/brand/club-placeholder.svg","venue":"Brasserskade"},
+    {"id":"club_westlandia","name":"Westlandia","region":"Westland","crest":"/assets/brand/club-placeholder.svg","venue":"Sportpark De Hoge Bomen"},
+    {"id":"club_forum","name":"Forum Sport","region":"Leidschendam-Voorburg","crest":"/assets/brand/club-placeholder.svg","venue":"Sportpark 't Loo"},
+    {"id":"club_hvv","name":"HVV","region":"Den Haag","crest":"/assets/brand/club-placeholder.svg","venue":"De Diepput"},
+    {"id":"club_vuc","name":"VUC","region":"Den Haag","crest":"/assets/brand/club-placeholder.svg","venue":"Het Kleine Loo"},
+    {"id":"club_hbs","name":"HBS","region":"Den Haag","crest":"/assets/brand/club-placeholder.svg","venue":"Sportpark Craeyenhout"},
+    {"id":"club_scheveningen","name":"SVV Scheveningen","region":"Den Haag","crest":"/assets/brand/club-placeholder.svg","venue":"Sportpark Houtrust"}
+  ],
+  "teams": [
+    {"id":"team_quick_1","clubId":"club_quick","name":"Quick 1","category":"Senioren"},
+    {"id":"team_duindorp_1","clubId":"club_duindorp","name":"Duindorp SV 1","category":"Senioren"},
+    {"id":"team_rkavv_1","clubId":"club_rkavv","name":"RKAVV 1","category":"Senioren"},
+    {"id":"team_dhc_1","clubId":"club_dhc","name":"DHC 1","category":"Senioren"},
+    {"id":"team_westlandia_1","clubId":"club_westlandia","name":"Westlandia 1","category":"Senioren"},
+    {"id":"team_forum_1","clubId":"club_forum","name":"Forum Sport 1","category":"Senioren"},
+    {"id":"team_hvv_1","clubId":"club_hvv","name":"HVV 1","category":"Senioren"},
+    {"id":"team_vuc_1","clubId":"club_vuc","name":"VUC 1","category":"Senioren"},
+    {"id":"team_hbs_1","clubId":"club_hbs","name":"HBS 1","category":"Senioren"},
+    {"id":"team_scheveningen_1","clubId":"club_scheveningen","name":"SVV Scheveningen 1","category":"Senioren"}
+  ],
+  "tournaments": [
+    {"id":"tournament_swc_2026","name":"Sir Winston Cup","season":"2026–2027","format":"KNOCKOUT","status":"QUARTER_FINALS","teamIds":["team_quick_1","team_duindorp_1","team_rkavv_1","team_dhc_1","team_westlandia_1","team_forum_1","team_hvv_1","team_vuc_1"]},
+    {"id":"tournament_hmc_2026","name":"Halve Maan Cup","season":"2026–2027","format":"KNOCKOUT","status":"LIVE","teamIds":["team_hbs_1","team_scheveningen_1"]}
+  ],
+  "matches": [
+    {"id":"match_qf_1","tournamentId":"tournament_swc_2026","round":"QUARTER_FINAL","slot":1,"homeTeamId":"team_quick_1","awayTeamId":"team_duindorp_1","kickoff":"2026-09-12T20:00:00+02:00","venue":"Sportpark Nieuw Hanenburg","field":"Hoofdveld","refereeUserId":"user_referee","status":"SCHEDULED","score":null,"official":false},
+    {"id":"match_qf_2","tournamentId":"tournament_swc_2026","round":"QUARTER_FINAL","slot":2,"homeTeamId":"team_rkavv_1","awayTeamId":"team_dhc_1","kickoff":"2026-09-05T20:00:00+02:00","venue":"Sportpark Kastelenring","field":"Hoofdveld","status":"FINISHED","score":{"home":3,"away":1},"official":true,"winnerTeamId":"team_rkavv_1"},
+    {"id":"match_qf_3","tournamentId":"tournament_swc_2026","round":"QUARTER_FINAL","slot":3,"homeTeamId":"team_westlandia_1","awayTeamId":"team_forum_1","kickoff":"2026-09-06T14:30:00+02:00","venue":"Sportpark De Hoge Bomen","field":"Hoofdveld","status":"FINISHED","score":{"home":2,"away":0},"official":true,"winnerTeamId":"team_westlandia_1"},
+    {"id":"match_qf_4","tournamentId":"tournament_swc_2026","round":"QUARTER_FINAL","slot":4,"homeTeamId":"team_hvv_1","awayTeamId":"team_vuc_1","kickoff":"2026-09-06T14:30:00+02:00","venue":"De Diepput","field":"Hoofdveld","status":"FINISHED","score":{"home":1,"away":1},"shootout":{"home":4,"away":3},"official":true,"winnerTeamId":"team_hvv_1"},
+    {"id":"match_sf_1","tournamentId":"tournament_swc_2026","round":"SEMI_FINAL","slot":1,"sourceMatchIds":["match_qf_1","match_qf_2"],"homeTeamId":null,"awayTeamId":"team_rkavv_1","kickoff":"2026-09-19T20:00:00+02:00","venue":"Nog te bepalen","status":"AWAITING_TEAMS","score":null,"official":false},
+    {"id":"match_sf_2","tournamentId":"tournament_swc_2026","round":"SEMI_FINAL","slot":2,"sourceMatchIds":["match_qf_3","match_qf_4"],"homeTeamId":"team_westlandia_1","awayTeamId":"team_hvv_1","kickoff":"2026-09-20T14:30:00+02:00","venue":"Sportpark De Hoge Bomen","status":"SCHEDULED","score":null,"official":false},
+    {"id":"match_live_1","tournamentId":"tournament_hmc_2026","round":"SEMI_FINAL","slot":1,"homeTeamId":"team_hbs_1","awayTeamId":"team_scheveningen_1","kickoff":"2026-09-12T20:00:00+02:00","venue":"Sportpark Craeyenhout","field":"Hoofdveld","status":"LIVE","minute":78,"score":{"home":2,"away":2},"official":false}
+  ],
+  "players": [
+    {"id":"p_ds_01","teamId":"team_duindorp_1","name":"Milan Vermeer","reference":"HV-D1001","dateOfBirth":"1998-02-14","shirtNumber":1,"position":"Keeper","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_02","teamId":"team_duindorp_1","name":"Yassin El Amrani","reference":"HV-D1002","dateOfBirth":"2001-06-08","shirtNumber":2,"position":"Verdediger","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_03","teamId":"team_duindorp_1","name":"Lars van Dalen","reference":"HV-D1003","dateOfBirth":"1999-11-19","shirtNumber":3,"position":"Verdediger","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_04","teamId":"team_duindorp_1","name":"Nadir Bakkali","reference":"HV-D1004","dateOfBirth":"2000-09-03","shirtNumber":4,"position":"Verdediger","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_05","teamId":"team_duindorp_1","name":"Tom van Rijn","reference":"HV-D1005","dateOfBirth":"1997-12-22","shirtNumber":5,"position":"Verdediger","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_06","teamId":"team_duindorp_1","name":"Ilias Bouman","reference":"HV-D1006","dateOfBirth":"2002-03-17","shirtNumber":6,"position":"Middenvelder","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_07","teamId":"team_duindorp_1","name":"Sem de Graaf","reference":"HV-D1007","dateOfBirth":"2001-01-28","shirtNumber":7,"position":"Aanvaller","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_08","teamId":"team_duindorp_1","name":"Rayan Akachar","reference":"HV-D1008","dateOfBirth":"2000-07-11","shirtNumber":8,"position":"Middenvelder","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_09","teamId":"team_duindorp_1","name":"Daan Koster","reference":"HV-D1009","dateOfBirth":"1998-05-26","shirtNumber":9,"position":"Aanvaller","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_10","teamId":"team_duindorp_1","name":"Mees Hofman","reference":"HV-D1010","dateOfBirth":"2003-04-09","shirtNumber":10,"position":"Middenvelder","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_11","teamId":"team_duindorp_1","name":"Omar Ait Lahcen","reference":"HV-D1011","dateOfBirth":"1999-10-31","shirtNumber":11,"position":"Aanvaller","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_12","teamId":"team_duindorp_1","name":"Finn van Leeuwen","reference":"HV-D1012","dateOfBirth":"2004-02-02","shirtNumber":12,"position":"Keeper","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_13","teamId":"team_duindorp_1","name":"Sami Azzouzi","reference":"HV-D1013","dateOfBirth":"2002-08-16","shirtNumber":13,"position":"Verdediger","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_14","teamId":"team_duindorp_1","name":"Jesse van Es","reference":"HV-D1014","dateOfBirth":"2001-12-04","shirtNumber":14,"position":"Middenvelder","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_15","teamId":"team_duindorp_1","name":"Bilal Mouradi","reference":"HV-D1015","dateOfBirth":"2000-02-27","shirtNumber":15,"position":"Verdediger","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_16","teamId":"team_duindorp_1","name":"Timo van Wijk","reference":"HV-D1016","dateOfBirth":"2003-09-12","shirtNumber":16,"position":"Middenvelder","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_17","teamId":"team_duindorp_1","name":"Ayoub Chafik","reference":"HV-D1017","dateOfBirth":"2002-11-23","shirtNumber":17,"position":"Aanvaller","photo":"/assets/brand/player-placeholder.svg"},
+    {"id":"p_ds_18","teamId":"team_duindorp_1","name":"Niels Kramer","reference":null,"dateOfBirth":"1999-06-30","shirtNumber":18,"position":"Aanvaller","photo":null}
+  ],
+  "rosters": [
+    {"id":"roster_duindorp_v1","teamId":"team_duindorp_1","version":1,"status":"INCOMPLEET","playerIds":["p_ds_01","p_ds_02","p_ds_03","p_ds_04","p_ds_05","p_ds_06","p_ds_07","p_ds_08","p_ds_09","p_ds_10","p_ds_11","p_ds_12","p_ds_13","p_ds_14","p_ds_15","p_ds_16","p_ds_17","p_ds_18"],"issues":[{"playerId":"p_ds_18","fields":["reference","photo"]}]}
+  ],
+  "scenario": {
+    "id":"quick-duindorp-qf",
+    "matchId":"match_qf_1",
+    "initialRosterId":"roster_duindorp_v1",
+    "expectedFinalScore":{"home":2,"away":1},
+    "expectedWinnerTeamId":"team_quick_1",
+    "expectedDestinationMatchId":"match_sf_1",
+    "discrepancy":{"playerId":"p_ds_10","type":"SHIRT_NUMBER","submitted":10,"observed":20,"resolutionReasonCode":"NUMBER_CONFIRMED_AT_VENUE"}
+  },
+  "liveEvents": [
+    {"id":"event_live_1","matchId":"match_live_1","minute":12,"type":"GOAL","teamId":"team_hbs_1"},
+    {"id":"event_live_2","matchId":"match_live_1","minute":34,"type":"GOAL","teamId":"team_scheveningen_1"},
+    {"id":"event_live_3","matchId":"match_live_1","minute":56,"type":"GOAL","teamId":"team_hbs_1"},
+    {"id":"event_live_4","matchId":"match_live_1","minute":74,"type":"GOAL","teamId":"team_scheveningen_1"}
+  ]
+}
+

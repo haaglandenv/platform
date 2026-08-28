@@ -1,0 +1,15 @@
+node_modules/
+.next/
+coverage/
+playwright-report/
+test-results/
+# HTML test report is reproducible; curated QA screenshots under artifacts/ are retained.
+.data/
+uploads/
+*.log
+*.tsbuildinfo
+.env
+.env.local
+.env.production
+!.env.example
+.DS_Store

@@ -1,0 +1,41 @@
+{
+  "name": "haaglanden-tournamentos",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "format:check": "prettier --check app components lib tests scripts *.ts *.mjs *.json docs BUILD_REPORT.md DEPLOYMENT_RUNBOOK.md public/media/assets.json",
+    "format": "prettier --write app components lib tests scripts *.ts *.mjs *.json docs BUILD_REPORT.md DEPLOYMENT_RUNBOOK.md public/media/assets.json",
+    "lint": "eslint . --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "seed": "node scripts/reset-demo.mjs",
+    "demo:reset": "node scripts/reset-demo.mjs"
+  },
+  "dependencies": {
+    "lucide-react": "1.34.0",
+    "next": "16.3.3",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "4.1.12"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.3",
+    "prettier": "3.8.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
+  }
+}

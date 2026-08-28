@@ -1,0 +1,1 @@
+const CACHE='hv-prototype-v1';const ASSETS=['./','./index.html','./assets/styles.css','./assets/app.js','./assets/haaglanden-logo.png'];self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));self.addEventListener('fetch',e=>e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request))));

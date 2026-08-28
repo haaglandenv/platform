@@ -1,0 +1,29 @@
+[
+  {
+    "id": "matchday-live",
+    "src": "/media/matchday-live.png",
+    "credit": "Synthetisch demobeeld · OpenAI ImageGen",
+    "rights": "Generated exclusively for the local TournamentOS demo",
+    "generationMode": "OpenAI ImageGen · nieuw rasterbeeld, zonder invoerafbeelding",
+    "promptBrief": "Documentaire avondwedstrijd bij een regionaal Nederlands voetbalcomplex, echte amateurvoetbalsfeer, groen-geel accent, geen logo's of tekst",
+    "alt": "Avondwedstrijd op een kleinschalig regionaal voetbalcomplex"
+  },
+  {
+    "id": "community-night",
+    "src": "/media/community-night.png",
+    "credit": "Synthetisch demobeeld · OpenAI ImageGen",
+    "rights": "Generated exclusively for the local TournamentOS demo",
+    "generationMode": "OpenAI ImageGen · nieuw rasterbeeld, zonder invoerafbeelding",
+    "promptBrief": "Warme documentaire supportersscène langs een regionaal Nederlands voetbalveld bij avondlicht, inclusief gemeenschap en vrijwilligers, geen logo's of tekst",
+    "alt": "Supporters volgen een regionale voetbalwedstrijd langs de lijn"
+  },
+  {
+    "id": "tournament-trophy",
+    "src": "/media/tournament-trophy.png",
+    "credit": "Synthetisch demobeeld · OpenAI ImageGen",
+    "rights": "Generated exclusively for the local TournamentOS demo",
+    "generationMode": "OpenAI ImageGen · nieuw rasterbeeld, zonder invoerafbeelding",
+    "promptBrief": "Editoriale close-up van een zilveren amateurvoetbalbeker aan de zijlijn met groene en gele linten, natuurlijk stadionlicht, geen logo's of tekst",
+    "alt": "Zilveren toernooibeker met groene en gele linten langs het veld"
+  }
+]

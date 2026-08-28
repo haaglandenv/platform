@@ -1,0 +1,103 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-haaglandencup
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Validate and deploy
+    if: github.ref == 'refs/heads/production'
+    environment:
+      name: production
+      url: https://haag.dgwebservices.nl
+    runs-on:
+      - self-hosted
+      - Linux
+      - X64
+      - dg-sites
+      - production
+      - haaglandencup
+    timeout-minutes: 30
+    env:
+      NEXT_PUBLIC_SITE_URL: https://haag.dgwebservices.nl
+      APP_ENVIRONMENT: production
+      APP_REVISION: ${{ github.sha }}
+      DG_RUNTIME_ENV_KEYS: >-
+        NEXT_PUBLIC_SITE_URL APP_ENVIRONMENT APP_REVISION
+
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Verify dedicated runner boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(id -un)" = "haaglandencup"
+          test "${RUNNER_NAME}" = "dg-sites-vps-01-haaglandencup-01"
+          [[ "${GITHUB_WORKSPACE}" == /srv/sites/haaglandencup/actions-runner/_work/* ]]
+          test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build standalone application
+        run: npm run build
+
+      - name: Deploy through the Sites VPS interface
+        run: |
+          /usr/local/bin/dg-site-deploy \
+            haaglandencup \
+            "${GITHUB_WORKSPACE}" \
+            "${GITHUB_SHA}" \
+            "${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+      - name: Verify public production
+        shell: bash
+        run: |
+          set -euo pipefail
+          health="$(curl --fail --silent --show-error --retry 8 --retry-all-errors --retry-delay 5 https://haag.dgwebservices.nl/api/health)"
+          HEALTH_JSON="${health}" node --input-type=module <<'NODE'
+          const health = JSON.parse(process.env.HEALTH_JSON);
+          if (
+            health.status !== "ok" ||
+            health.service !== "haaglandencup" ||
+            health.environment !== "production" ||
+            health.revision !== process.env.GITHUB_SHA
+          ) throw new Error("The public health response does not match the deployed revision.");
+          NODE
+          for route in / /nieuws /wedstrijden/quick-duindorp-sv /toernooien/sir-winston-cup/bracket /clubs; do
+            curl --fail --silent --show-error --retry 3 --retry-all-errors "https://haag.dgwebservices.nl${route}" >/dev/null
+          done
