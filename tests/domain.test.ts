@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import seedJson from "@/demo-data/tournamentos-seed.json";
 import {
   canApproveLineupChecks,
+  defaultRules,
+  evaluateRules,
   hydrateState,
   officialWinner,
   recalculateBracket,
@@ -84,6 +86,17 @@ describe("roster and lineup integrity", () => {
     const result = validateEligibility(players, "2026-09-12", 18, [players[1].id]);
     expect(result.errors).toContain(`${players[0].name}: voldoet niet aan de leeftijdsregel (18+)`);
     expect(result.errors).toContain(`${players[1].name}: actieve schorsing blokkeert goedkeuring`);
+  });
+
+  it("applies the configured dispensation limit and round rules", () => {
+    const players = seed()
+      .players.filter((player) => player.teamId === "team_duindorp_1")
+      .slice(0, 4)
+      .map((player) => ({ ...player, dispensation: true }));
+    const result = evaluateRules(players, { ...defaultRules, maxDispensations: 3 });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContain("Maximaal 3 dispensaties toegestaan; 4 geselecteerd.");
+    expect(defaultRules.extraTimeRounds).toContain("FINAL");
   });
 
   it("rejects out-of-scope and oversized lineups", () => {

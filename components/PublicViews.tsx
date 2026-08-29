@@ -68,6 +68,16 @@ const stories = [
   },
 ];
 
+function roundLabel(round: string) {
+  return (
+    {
+      QUARTER_FINAL: "kwartfinale",
+      SEMI_FINAL: "halve finale",
+      FINAL: "finale",
+    }[round] ?? round.toLowerCase().replaceAll("_", " ")
+  );
+}
+
 export function PublicView(props: Props) {
   const { path } = props;
   if (path === "/") return <HomeView {...props} />;
@@ -90,61 +100,171 @@ export function PublicView(props: Props) {
 }
 
 function HomeView({ data, action, busy }: Props) {
-  const featured = data.matches.find((match) => match.id === "match_qf_1")!;
+  const featured =
+    data.matches.find((match) => match.status === "LIVE") ??
+    data.matches.find((match) => match.id === "match_qf_1")!;
+  const featuredHome = teamDetails(data, featured.homeTeamId);
+  const featuredAway = teamDetails(data, featured.awayTeamId);
+  const featuredTournament = data.tournaments.find(
+    (tournament) => tournament.id === featured.tournamentId,
+  );
+  const featuredRoute =
+    featured.id === "match_qf_1" ? "/wedstrijden/quick-duindorp-sv" : "/wedstrijden";
+  const metrics = data.runtime.matchMetrics[featured.id];
+  const [shareFeedback, setShareFeedback] = useState("");
+  const latestEvent = [
+    ...data.liveEvents.filter((event) => event.matchId === featured.id),
+    ...data.runtime.matchEvents.filter(
+      (event) => event.matchId === featured.id && !event.corrected,
+    ),
+  ]
+    .sort((left, right) => left.minute - right.minute)
+    .at(-1);
+  const cards = data.runtime.matchEvents.filter(
+    (event) =>
+      event.matchId === featured.id &&
+      !event.corrected &&
+      (event.type === "YELLOW" || event.type === "RED"),
+  );
+  const shareMatch = async () => {
+    const url = `${window.location.origin}${featuredRoute}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${featuredHome.team?.name ?? "Thuisteam"} – ${featuredAway.team?.name ?? "Uitteam"}`,
+          url,
+        });
+        setShareFeedback("Deelvenster geopend");
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareFeedback("Wedstrijdlink gekopieerd");
+      }
+    } catch (error) {
+      setShareFeedback(
+        error instanceof DOMException && error.name === "AbortError"
+          ? "Delen geannuleerd"
+          : "Delen is niet gelukt",
+      );
+    }
+  };
   return (
     <>
-      <section className="editorial-hero">
-        <Image
-          src="/media/matchday-live.png"
-          alt="Synthetische avondwedstrijd op een regionaal voetbalcomplex"
-          fill
-          priority
-          sizes="100vw"
-        />
-        <div className="editorial-hero__overlay" />
-        <div className="container editorial-hero__content">
-          <p className="eyebrow eyebrow--light">Sir Winston Cup · kwartfinale</p>
-          <h1>
-            Hier wordt
-            <br />
-            de regio beslist.
-          </h1>
-          <p>Quick en Duindorp SV openen zaterdag de jacht op een plek in de halve finale.</p>
-          <div className="button-row">
-            <Link className="button button--lime" href="/nieuws/quick-klaar-voor-kwartfinale">
-              Lees het verhaal <ChevronRight size={18} />
+      <section className="home-stage">
+        <div className="editorial-hero">
+          <Image
+            src="/media/tournament-hero-v2.png"
+            alt="Synthetische groen-witte spelers vieren een moment op een regionaal voetbalveld"
+            fill
+            loading="eager"
+            sizes="100vw"
+          />
+          <div className="editorial-hero__overlay" />
+          <div className="container editorial-hero__content">
+            <p className="eyebrow eyebrow--light">Sir Winston Cup · kwartfinale</p>
+            <h1>De strijd om de Sir Winston Cup gaat verder</h1>
+            <p>
+              Alles staat op scherp. Acht clubs, vier affiches en één route naar de grote finaledag
+              van Haaglanden.
+            </p>
+            <Link
+              className="button button--lime home-primary-cta"
+              href="/nieuws/quick-klaar-voor-kwartfinale"
+            >
+              Lees het verhaal <ChevronRight size={20} />
             </Link>
-            <Link className="button button--ghost-light" href="/wedstrijden/quick-duindorp-sv">
-              Naar Match Centre
+            <Link className="home-secondary-link" href="/toernooien/sir-winston-cup">
+              Bekijk het toernooi
             </Link>
+            <small>Synthetisch demobeeld · OpenAI ImageGen</small>
           </div>
-          <small>Synthetisch demobeeld · OpenAI ImageGen</small>
         </div>
-      </section>
 
-      <section className="container home-match-band">
-        <div>
-          <p className="eyebrow">Zaterdag · 20:00</p>
-          <h2>De kwartfinale die telt</h2>
-        </div>
-        <div className="featured-score">
-          <span>
-            <ClubCrest club={teamDetails(data, featured.homeTeamId).club} />
-            <strong>Quick</strong>
-          </span>
-          <div>
-            <StatusBadge status={featured.official ? "OFFICIEEL" : featured.status} />
-            <MatchScore match={featured} />
-            <small>Nieuw Hanenburg</small>
+        <article
+          className="container home-live-card"
+          aria-label={`Uitgelichte wedstrijd ${featuredHome.team?.name ?? "thuisteam"} tegen ${featuredAway.team?.name ?? "uitteam"}`}
+        >
+          <Image
+            src="/media/tournament-hero-v2.png"
+            alt=""
+            fill
+            sizes="(max-width: 767px) calc(100vw - 32px), 900px"
+          />
+          <div className="home-live-card__veil" />
+          <div className="home-live-card__content">
+            <header>
+              <StatusBadge status={featured.official ? "OFFICIEEL" : featured.status} />
+              <button
+                className="home-share-button"
+                onClick={shareMatch}
+                aria-label="Deel deze wedstrijd"
+              >
+                <Share2 size={22} />
+              </button>
+            </header>
+            <p className="eyebrow eyebrow--light">
+              {featuredTournament?.name ?? "Bekertoernooi"} · {roundLabel(featured.round)}
+            </p>
+            <div className="home-live-score">
+              <span>
+                <ClubCrest club={featuredHome.club} size="lg" />
+                <strong>{featuredHome.team?.name.replace(/ 1$/, "") ?? "Nog te bepalen"}</strong>
+              </span>
+              <MatchScore match={featured} />
+              <span>
+                <ClubCrest club={featuredAway.club} size="lg" />
+                <strong>{featuredAway.team?.name.replace(/ 1$/, "") ?? "Nog te bepalen"}</strong>
+              </span>
+            </div>
+            <div className="home-live-event">
+              <span aria-hidden="true">⚽</span>
+              <div>
+                <strong>
+                  {latestEvent
+                    ? `${latestEvent.minute}′ · ${latestEvent.type === "GOAL" ? "Doelpunt" : "Wedstrijdmoment"}`
+                    : "Zaterdag · 20:00"}
+                </strong>
+                <small>
+                  {latestEvent
+                    ? `${featuredHome.team?.name.replace(/ 1$/, "") ?? "Thuis"} – ${featuredAway.team?.name.replace(/ 1$/, "") ?? "Uit"}`
+                    : featured.venue}
+                </small>
+              </div>
+            </div>
+            <Button
+              className="button--lime home-follow-button"
+              busy={busy === "follow"}
+              onClick={() => action("follow", { id: featured.id }, "Wedstrijd gevolgd.")}
+            >
+              {data.runtime.favorites.includes(featured.id)
+                ? "Je volgt deze wedstrijd"
+                : "Volg live"}
+              <ChevronRight size={20} />
+            </Button>
+            <dl className="home-live-stats">
+              <div>
+                <dt>Balbezit</dt>
+                <dd>
+                  {metrics
+                    ? `${metrics.possession.home}–${metrics.possession.away}%`
+                    : "Nog niet beschikbaar"}
+                </dd>
+              </div>
+              <div>
+                <dt>Schoten</dt>
+                <dd>{metrics ? `${metrics.shots.home}–${metrics.shots.away}` : "–"}</dd>
+              </div>
+              <div>
+                <dt>Kaarten</dt>
+                <dd>{cards.length ? `0–${cards.length}` : "0–0"}</dd>
+              </div>
+            </dl>
+            {shareFeedback ? (
+              <span className="home-share-feedback" role="status">
+                {shareFeedback}
+              </span>
+            ) : null}
           </div>
-          <span>
-            <ClubCrest club={teamDetails(data, featured.awayTeamId).club} />
-            <strong>Duindorp SV</strong>
-          </span>
-        </div>
-        <Link className="text-link" href="/wedstrijden/quick-duindorp-sv">
-          Volg de wedstrijd <ChevronRight size={17} />
-        </Link>
+        </article>
       </section>
 
       <section className="container section-block">
@@ -373,7 +493,7 @@ function ArticleView({ data }: Props) {
           src="/media/matchday-live.png"
           fill
           alt="Synthetische avondwedstrijd op een regionaal voetbalveld"
-          priority
+          loading="eager"
         />
         <small>Synthetisch demobeeld · OpenAI ImageGen</small>
       </div>
@@ -500,7 +620,7 @@ function TournamentView(props: Props) {
               src="/media/tournament-trophy.png"
               fill
               alt="Synthetische zilveren beker met groene en gele linten"
-              priority
+              loading="eager"
             />
           </div>
         </div>
@@ -543,7 +663,7 @@ function TournamentView(props: Props) {
         ) : active === "nieuws" ? (
           <NewsView {...props} />
         ) : active === "reglement" ? (
-          <RulesView />
+          <RulesView data={data} />
         ) : (
           <TournamentOverview data={data} />
         )}
@@ -792,13 +912,23 @@ function MatchCentre({ data, action, busy }: Props) {
         : match.status === "FINISHED_PROVISIONAL"
           ? "VOORLOPIG"
           : match.status;
-  const events = match.score
-    ? [
-        { minute: 18, label: "Doelpunt Quick", score: "1–0" },
-        { minute: 55, label: "Doelpunt Duindorp SV", score: "1–1" },
-        { minute: 82, label: "Doelpunt Quick", score: "2–1" },
-      ]
-    : [];
+  const events = [...data.runtime.matchEvents]
+    .filter((event) => event.matchId === match.id && !event.corrected)
+    .sort((a, b) => a.minute - b.minute)
+    .map((event, index, orderedEvents) => {
+      const eventsThroughCurrent = orderedEvents.slice(0, index + 1);
+      const runningHome = eventsThroughCurrent.filter(
+        (item) => item.type === "GOAL" && item.teamId === match.homeTeamId,
+      ).length;
+      const runningAway = eventsThroughCurrent.filter(
+        (item) => item.type === "GOAL" && item.teamId === match.awayTeamId,
+      ).length;
+      return {
+        ...event,
+        label: `${event.type === "GOAL" ? "Doelpunt" : event.type === "YELLOW" ? "Gele kaart" : event.type === "RED" ? "Rode kaart" : event.type.replaceAll("_", " ")} ${event.teamId === match.homeTeamId ? "Quick" : event.teamId === match.awayTeamId ? "Duindorp SV" : ""}`,
+        score: event.type === "GOAL" ? `${runningHome}–${runningAway}` : "",
+      };
+    });
   const copy = async () => {
     await navigator.clipboard.writeText(window.location.href);
     setFeedback("Link gekopieerd");
@@ -810,7 +940,7 @@ function MatchCentre({ data, action, busy }: Props) {
           src="/media/matchday-live.png"
           fill
           alt="Synthetische avondwedstrijd op Nieuw Hanenburg"
-          priority
+          loading="eager"
         />
         <div className="match-centre-hero__veil" />
         <div className="container match-centre-score">
@@ -888,7 +1018,15 @@ function MatchCentre({ data, action, busy }: Props) {
                   {events.map((event) => (
                     <li key={event.minute}>
                       <time>{event.minute}′</time>
-                      <span>⚽</span>
+                      <span>
+                        {event.type === "GOAL"
+                          ? "⚽"
+                          : event.type === "YELLOW"
+                            ? "🟨"
+                            : event.type === "RED"
+                              ? "🟥"
+                              : "↔"}
+                      </span>
                       <p>{event.label}</p>
                       <strong>{event.score}</strong>
                     </li>
@@ -935,7 +1073,12 @@ function MatchCentre({ data, action, busy }: Props) {
                 </div>
                 <div>
                   <dt>Regel</dt>
-                  <dd>Bij gelijkspel direct strafschoppen</dd>
+                  <dd>
+                    {data.runtime.rules.halves} × {data.runtime.rules.halfDurationMinutes} minuten ·{" "}
+                    {data.runtime.rules.extraTimeRounds.includes(match.round)
+                      ? `${data.runtime.rules.finalExtraTimeMinutes} minuten verlenging`
+                      : "direct strafschoppen bij gelijkspel"}
+                  </dd>
                 </div>
               </dl>
             ) : (
@@ -1055,7 +1198,7 @@ function ClubDetail({ data, action, busy }: Props) {
           src="/media/community-night.png"
           fill
           alt="Synthetische supporters bij een regionale voetbalclub"
-          priority
+          loading="eager"
         />
         <div className="club-hero__veil" />
         <div className="container">
@@ -1119,6 +1262,9 @@ function MediaView({ path, data, action, busy }: Props) {
   const [type, setType] = useState("Alles");
   const [name, setName] = useState("");
   const [consent, setConsent] = useState(false);
+  const [website, setWebsite] = useState(true);
+  const [articles, setArticles] = useState(true);
+  const [social, setSocial] = useState(false);
   if (path !== "/media")
     return (
       <div className="container page-space">
@@ -1148,7 +1294,20 @@ function MediaView({ path, data, action, busy }: Props) {
     );
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    await action("submit-media", { name, consent }, "Upload staat veilig in moderatie.");
+    await action(
+      "submit-media",
+      {
+        name,
+        consent,
+        matchId: "match_qf_1",
+        clubId: "club_duindorp",
+        website,
+        articles,
+        social,
+        credit: "Community-inzender",
+      },
+      "Upload staat veilig in moderatie.",
+    );
     setName("");
     setConsent(false);
   };
@@ -1224,7 +1383,39 @@ function MediaView({ path, data, action, busy }: Props) {
               Ik geef toestemming voor redactionele beoordeling en bevestig dat ik de rechten heb.
             </span>
           </label>
-          <Button busy={busy === "submit-media"}>Verstuur voor moderatie</Button>
+          <fieldset className="rights-fieldset">
+            <legend>Haaglanden Voetbal mag dit gebruiken voor</legend>
+            <label className="check-control">
+              <input
+                type="checkbox"
+                checked={website}
+                onChange={(event) => setWebsite(event.target.checked)}
+              />
+              <span>Website en wedstrijdpagina</span>
+            </label>
+            <label className="check-control">
+              <input
+                type="checkbox"
+                checked={articles}
+                onChange={(event) => setArticles(event.target.checked)}
+              />
+              <span>Nieuwsartikelen</span>
+            </label>
+            <label className="check-control">
+              <input
+                type="checkbox"
+                checked={social}
+                onChange={(event) => setSocial(event.target.checked)}
+              />
+              <span>Social media</span>
+            </label>
+          </fieldset>
+          <Button
+            busy={busy === "submit-media"}
+            disabled={!consent || (!website && !articles && !social)}
+          >
+            Verstuur voor moderatie
+          </Button>
           <p className="form-help">
             Bestanden worden in deze demo niet publiek als identiteitsmateriaal opgeslagen.
           </p>
@@ -1494,7 +1685,37 @@ function SettingsView({ data, action, busy }: Pick<Props, "data" | "action" | "b
           Deze demo bevat een installatiemanifest en app-kleuren. Installatie hangt af van browser
           en beveiligde context.
         </p>
-        <StatusBadge status="Installatie gereed" />
+        <StatusBadge
+          status={
+            data.runtime.pushPermission === "ENABLED"
+              ? "PUSH INGESCHAKELD"
+              : data.runtime.pushPermission
+          }
+        />
+        <div className="button-row">
+          <Button
+            busy={busy === "set-push"}
+            disabled={data.runtime.pushPermission === "ENABLED"}
+            onClick={() =>
+              action("set-push", { permission: "ENABLED" }, "Gesimuleerde pushstatus ingeschakeld.")
+            }
+          >
+            Push inschakelen
+          </Button>
+          <Button
+            className="button--outline"
+            busy={busy === "set-push"}
+            disabled={data.runtime.pushPermission === "DENIED"}
+            onClick={() =>
+              action("set-push", { permission: "DENIED" }, "Pushmeldingen uitgeschakeld.")
+            }
+          >
+            Niet toestaan
+          </Button>
+        </div>
+        <p className="form-help">
+          De demo bewaart de toestemmingsstatus; externe browserpush wordt niet verzonden.
+        </p>
       </Card>
     </div>
   );
@@ -1504,9 +1725,12 @@ function LoginView({ switchRole, busy, action }: Props) {
   const roles: Array<{ role: Role; title: string; href: string }> = [
     { role: "supporter", title: "Supporter · HV Next", href: "/next" },
     { role: "leadership", title: "Toernooileiding", href: "/beheer/toernooileiding" },
+    { role: "matchops", title: "Wedstrijdleiding", href: "/beheer/wedstrijdleiding" },
     { role: "association", title: "Verenigingsmanager", href: "/beheer/vereniging" },
     { role: "team", title: "Teammanager", href: "/beheer/team" },
     { role: "referee", title: "Scheidsrechter", href: "/beheer/scheidsrechter" },
+    { role: "press", title: "Pers / Redactie", href: "/beheer/pers" },
+    { role: "photographer", title: "Fotograaf", href: "/beheer/fotograaf" },
   ];
   return (
     <div className="login-page">
@@ -1614,7 +1838,7 @@ function StatisticsView() {
     </>
   );
 }
-function RulesView() {
+function RulesView({ data }: { data: AppData }) {
   const [open, setOpen] = useState(0);
   const [query, setQuery] = useState("");
   const rules = ["Wedstrijdduur", "Gelijke stand", "Dispensaties", "Tucht"].filter((item) =>
@@ -1623,7 +1847,7 @@ function RulesView() {
   return (
     <>
       <PageHeader
-        eyebrow="Versie 2.1 · geldig 1 augustus 2026"
+        eyebrow={`Versie ${data.runtime.rules.version} · geldig vanaf ${data.runtime.rules.effectiveFrom}`}
         title="Toernooireglement"
         intro="Doorzoekbare kernregels met een duidelijke ingangsdatum."
       />
@@ -1649,10 +1873,14 @@ function RulesView() {
           {open === index ? (
             <p>
               {item === "Wedstrijdduur"
-                ? "De wedstrijd bestaat uit twee helften van 45 minuten."
+                ? `De wedstrijd bestaat uit ${data.runtime.rules.halves} helften van ${data.runtime.rules.halfDurationMinutes} minuten in spelvorm ${data.runtime.rules.format}.`
                 : item === "Gelijke stand"
-                  ? "Bij een gelijke stand volgen direct strafschoppen."
-                  : "De toernooileiding beoordeelt deze regel volgens de vastgelegde versie."}
+                  ? data.runtime.rules.extraTimeRounds.includes("FINAL")
+                    ? `In de finale volgt ${data.runtime.rules.finalExtraTimeMinutes} minuten verlenging; daarna strafschoppen.`
+                    : "Bij een gelijke stand volgen direct strafschoppen."
+                  : item === "Dispensaties"
+                    ? `Maximaal ${data.runtime.rules.maxDispensations} dispensatiespelers per selectie.`
+                    : `Na ${data.runtime.rules.yellowCardsForSuspension} gele kaarten volgt een automatische selectiewaarschuwing.`}
             </p>
           ) : null}
         </section>

@@ -25,5 +25,23 @@
     "generationMode": "OpenAI ImageGen · nieuw rasterbeeld, zonder invoerafbeelding",
     "promptBrief": "Editoriale close-up van een zilveren amateurvoetbalbeker aan de zijlijn met groene en gele linten, natuurlijk stadionlicht, geen logo's of tekst",
     "alt": "Zilveren toernooibeker met groene en gele linten langs het veld"
+  },
+  {
+    "id": "tournament-hero-v2",
+    "src": "/media/tournament-hero-v2.png",
+    "credit": "Synthetisch demobeeld · OpenAI ImageGen",
+    "rights": "Generated exclusively for the local TournamentOS demo",
+    "generationMode": "OpenAI ImageGen · nieuw rasterbeeld met twee door de gebruiker aangeleverde UI-screenshots als visuele referentie; geen UI-elementen overgenomen",
+    "promptBrief": "Premium regionale amateurvoetbalfotografie met volwassen groen-witte spelers rechts in beeld, donkere negatieve ruimte links en een bescheiden Nederlands sportpark zonder merken of tekst",
+    "alt": "Groen-witte spelers vieren een moment op een regionaal voetbalveld"
+  },
+  {
+    "id": "social-preview",
+    "src": "/media/social-preview.png",
+    "credit": "Synthetisch demobeeld · OpenAI ImageGen",
+    "rights": "Generated exclusively for the local TournamentOS demo",
+    "generationMode": "OpenAI ImageGen · nieuw social-preview-rasterbeeld met tournament-hero-v2 uitsluitend als visuele referentie",
+    "promptBrief": "Liggende premium social card voor regionale amateurvoetbaljournalistiek met Haaglanden-groenen, lime typografie en volwassen groen-witte spelers op een bescheiden avondveld",
+    "alt": "Haaglanden Voetbal TournamentOS social preview bij een regionaal voetbalveld"
   }
 ]

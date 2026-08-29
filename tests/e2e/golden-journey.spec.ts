@@ -99,6 +99,59 @@ test("complete seeded roster-to-official-bracket journey remains coherent", asyn
 
   await setRole(page, "referee");
   await page.goto("/beheer/scheidsrechter/wedstrijden/match_qf_1/rapport");
+  await action(page, "add-match-event", {
+    type: "GOAL",
+    teamId: "team_quick_1",
+    playerId: "p_q_09",
+    minute: 18,
+  });
+  await action(page, "add-match-event", {
+    type: "YELLOW",
+    teamId: "team_duindorp_1",
+    playerId: "p_ds_04",
+    minute: 34,
+  });
+  await action(page, "add-match-event", {
+    type: "GOAL",
+    teamId: "team_duindorp_1",
+    playerId: "p_ds_09",
+    minute: 55,
+  });
+  await action(page, "add-match-event", {
+    type: "RED",
+    teamId: "team_duindorp_1",
+    playerId: "p_ds_15",
+    minute: 71,
+  });
+  await action(page, "add-match-event", {
+    type: "GOAL",
+    teamId: "team_quick_1",
+    playerId: "p_q_11",
+    minute: 82,
+  });
+  await action(page, "interrupt-match", {
+    type: "TEMPORARY",
+    reason: "Onweer boven het veld",
+    minute: 83,
+    possession: "Quick",
+    lastRestart: "Vrije trap Quick",
+    lastKickoff: "Duindorp SV",
+    playersOnField: ["p_q_01", "p_ds_01"],
+    cards: ["p_ds_04", "p_ds_15"],
+    substitutions: [],
+    comments: "Teams in kleedkamer",
+    refereeReport: "Spel veilig stilgelegd wegens bliksem.",
+  });
+
+  await setRole(page, "leadership");
+  await page.goto("/beheer/toernooileiding/tucht");
+  await action(page, "decide-incident", {
+    decision: "RESUME_NOW",
+    reason: "Veiligheidscheck voltooid; wedstrijd kan onder toezicht worden hervat.",
+  });
+
+  await setRole(page, "referee");
+  await page.goto("/beheer/scheidsrechter/wedstrijden/match_qf_1/rapport");
   await action(page, "submit-result");
   const provisional = await operationsState(page);
   expect(provisional.data.matches.find((match) => match.id === "match_qf_1")?.status).toBe(
@@ -111,6 +164,10 @@ test("complete seeded roster-to-official-bracket journey remains coherent", asyn
   await setRole(page, "team");
   await page.goto("/beheer/team");
   await action(page, "confirm-team-result");
+
+  await setRole(page, "matchops");
+  await page.goto("/beheer/wedstrijdleiding");
+  await action(page, "confirm-home-result");
 
   await setRole(page, "leadership");
   await page.goto("/beheer/toernooileiding/uitslagen");

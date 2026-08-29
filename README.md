@@ -2,9 +2,9 @@
 
 Begin met [`START_HERE.md`](START_HERE.md). De autonome VPS-opdracht staat in [`CODEX_AUTONOMOUS_BUILD_PROMPT.md`](CODEX_AUTONOMOUS_BUILD_PROMPT.md).
 
-Dit pakket bevat de production-ready Next.js-app, de oorspronkelijke ontwerpbeelden en brieven, het 300-featureswerkboek, genormaliseerde requirements, deterministische synthetische seeddata, assets en QA-gates.
+Dit pakket bevat een lokaal geverifieerde premium DEV-demo in Next.js, de oorspronkelijke ontwerpbeelden en brieven, het 300-featureswerkboek, genormaliseerde requirements, deterministische synthetische seeddata, assets en QA-gates.
 
-De productie-uitrol wordt uitsluitend gestart door een push naar `production` en loopt via de repository-scoped GitHub Actions-runner en `/usr/local/bin/dg-site-deploy`. Een push naar `main` deployt niet.
+De demo omvat publieke, persoonlijke en operationele ervaringen voor supporter, toernooileiding, wedstrijdleiding, verenigingsmanager, teammanager, scheidsrechter, pers en fotograaf. De rolwissel is uitsluitend een synthetisch reviewmechanisme; productie-authenticatie en externe diensten zijn niet aangesloten.
 
 ## Lokale quality gates
 
@@ -18,4 +18,4 @@ npm run build
 npm run test:e2e
 ```
 
-Production gebruikt `NEXT_PUBLIC_SITE_URL`, `APP_ENVIRONMENT` en `APP_REVISION`; zie `.env.example` en `DEPLOYMENT_RUNBOOK.md`.
+Er is niets gepusht of gedeployed. `DEPLOYMENT_RUNBOOK.md` is gemarkeerd als **NOT EXECUTED** en mag alleen na expliciete goedkeuring worden gebruikt.

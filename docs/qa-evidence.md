@@ -2,23 +2,24 @@
 
 ## Automated gates
 
-| Command                           | Result                                                 |
-| --------------------------------- | ------------------------------------------------------ |
-| `bash scripts/verify-handoff.sh`  | Passed; all original checksums match                   |
-| `npm ci`                          | Passed; one lockfile, 0 audit vulnerabilities          |
-| `npm run format:check`            | Passed                                                 |
-| `npm run lint`                    | Passed with zero warnings                              |
-| `npm run typecheck`               | Passed                                                 |
-| `npm run test`                    | Passed: 16 tests                                       |
-| `npm run build`                   | Passed: Next.js production bundle                      |
-| `npm run test:e2e`                | Passed: 6 Chromium tests including full golden journey |
-| Secret and source-whitespace scan | Passed                                                 |
+| Command                          | Result                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| `bash scripts/verify-handoff.sh` | Passed for immutable source material; living implementation README excluded |
+| `npm run format:check`           | Passed                                                                      |
+| `npm run lint`                   | Passed with zero warnings                                                   |
+| `npm run typecheck`              | Passed for application and tests                                            |
+| `npm run test`                   | Passed: 21 tests across domain, health and permissions                      |
+| `npm run build`                  | Passed: optimized Next.js bundle                                            |
+| `npm run test:e2e`               | Passed: 9 Chromium tests, including the expanded golden journey             |
+| `git diff --check`               | Passed                                                                      |
 
-Domain coverage includes official/provisional progression, result recalculation, team confirmation, bye/walkover progression without invented scores, roster completeness/duplicates/eligibility, lineup limits/scope, event-score reconciliation, T-60 boundary, complete-check gating, direct-route/action denial and public-field projection.
+Domain coverage includes official/provisional progression, three-party result confirmation, bye/walkover progression without invented scores, roster completeness/duplicates/eligibility/dispensation, configured lineup limits/scope, event-score reconciliation, T-60 boundary, both-team complete-check gating, role/record/action denial and public/press field projection.
+
+The browser workflows additionally cover fixture-change dual approval, media rights/moderation/press visibility, versioned rules, denied-action security logging, live card/goal/interruption events and referee/home/away result confirmation.
 
 ## Responsive matrix
 
-Playwright loaded homepage, bracket, Match Centre, HV Next and all four role dashboards at every required viewport:
+Playwright loaded homepage, bracket, Match Centre, HV Next and all seven operational role dashboards at every required viewport:
 
 | Viewport    | Chromium | Overflow | Console/page errors |
 | ----------- | -------- | -------- | ------------------- |
@@ -30,11 +31,13 @@ Playwright loaded homepage, bracket, Match Centre, HV Next and all four role das
 | 1440 × 900  | Passed   | None     | None                |
 | 1920 × 1080 | Passed   | None     | None                |
 
-Curated full-page screenshots are stored under `artifacts/qa/screenshots/` for 390 and 1440 px. The same test verifies no page-level horizontal overflow for 56 route × viewport combinations.
+Curated screenshots are stored under `artifacts/qa/screenshots/` for 390 and 1440 px, plus focused 390 px captures of the reference-aligned hero and live card. The same test verifies no page-level horizontal overflow for 77 route × viewport combinations across 11 product areas.
+
+Network QA fails on every 4xx/5xx response and non-cancelled request failure. Next.js RSC prefetches intentionally cancelled during rapid full-page route replacement (`ERR_ABORTED` with `_rsc`) are excluded because they are browser navigation cancellations, not failed application requests.
 
 ## Direct-load matrix
 
-The browser suite directly loads and hard-refreshes 24 public route states: news index/article, tournament overview/program/teams/statistics/news/rules, matches, clubs/detail, privacy-fallback player, media/detail, history, Final Day, search, account, notifications, login and HV Next subroutes.
+The browser suite directly loads and hard-refreshes 24 public route states and 27 operational routes across all seven operational roles. Coverage includes news, tournament tabs, matches, clubs, player privacy fallback, media, history, Final Day, search, account, notifications, login, HV Next and every declared dashboard/nav route. Each operational role root is additionally loaded from a fresh server projection throughout the viewport matrix.
 
 ## Accessibility/reflow notes
 
@@ -48,7 +51,8 @@ The browser suite directly loads and hard-refreshes 24 public route states: news
 ## Visual review notes
 
 - Editorial, Tournament Arena, Matchday, Football Network and HV Next directions are implemented as one token system.
-- Three local synthetic editorial assets were generated for this demo and are clearly credited.
+- The final homepage pass was visually compared with both user-supplied mobile captures: device/browser chrome was excluded, while header actions, ticker rhythm, hero hierarchy, lime CTA, overlapping match card and bottom-nav labels were matched.
+- Five local synthetic editorial/social assets were generated for this demo and are clearly credited.
 - Original 8K boards remain references and are not embedded as UI screenshots.
 - Supplied club/player fallbacks are centrally rendered and explicitly labelled as generic.
 
@@ -56,4 +60,5 @@ The browser suite directly loads and hard-refreshes 24 public route states: news
 
 - Native screen-reader passes (NVDA/VoiceOver) were not available in this CLI environment.
 - Real iOS safe-area/PWA installation and non-Chromium engines remain a device/browser lab check.
+- Browser push/service-worker delivery is simulated as an explicit permission state; no external delivery service is connected.
 - Real upload bytes, malware scanning, EXIF stripping and production identity storage are intentionally not implemented in the local demo.

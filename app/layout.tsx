@@ -15,8 +15,19 @@ export const metadata: Metadata = {
     siteName: "Haaglanden Voetbal TournamentOS",
     title: "Haaglanden Voetbal TournamentOS",
     description: "Het complete regionale voetbalplatform voor Haaglanden.",
+    images: [
+      {
+        url: "/media/social-preview.png",
+        width: 1730,
+        height: 909,
+        alt: "Haaglanden Voetbal TournamentOS bij een regionaal voetbalveld",
+      },
+    ],
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/media/social-preview.png"],
+  },
   manifest: "/manifest.webmanifest",
 };
 

@@ -19,9 +19,12 @@ const reviewRoutes: Array<{ slug: string; route: string; role: Role }> = [
   { slug: "match-centre", route: "/wedstrijden/quick-duindorp-sv", role: "supporter" },
   { slug: "hv-next", route: "/next", role: "supporter" },
   { slug: "leadership", route: "/beheer/toernooileiding", role: "leadership" },
+  { slug: "matchops", route: "/beheer/wedstrijdleiding", role: "matchops" },
   { slug: "association", route: "/beheer/vereniging", role: "association" },
   { slug: "team", route: "/beheer/team", role: "team" },
   { slug: "referee", route: "/beheer/scheidsrechter", role: "referee" },
+  { slug: "press", route: "/beheer/pers", role: "press" },
+  { slug: "photographer", route: "/beheer/fotograaf", role: "photographer" },
 ];
 
 async function setRole(page: Page, role: Role) {
@@ -41,10 +44,22 @@ test("representative product areas pass the required viewport matrix", async ({ 
   test.setTimeout(180_000);
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
+  const networkErrors: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  page.on("requestfailed", (request) => {
+    const errorText = request.failure()?.errorText;
+    const isCancelledNextPrefetch =
+      errorText === "net::ERR_ABORTED" && request.url().includes("_rsc=");
+    if (!isCancelledNextPrefetch)
+      networkErrors.push(`${request.method()} ${request.url()} · ${errorText}`);
+  });
+  page.on("response", (response) => {
+    if (response.status() >= 400)
+      networkErrors.push(`${response.status()} ${response.request().method()} ${response.url()}`);
+  });
   const screenshotRoot = path.join(process.cwd(), "artifacts", "qa", "screenshots");
   await mkdir(screenshotRoot, { recursive: true });
 
@@ -74,6 +89,7 @@ test("representative product areas pass the required viewport matrix", async ({ 
 
   expect(pageErrors, "uncaught page errors").toEqual([]);
   expect(consoleErrors, "browser console errors").toEqual([]);
+  expect(networkErrors, "failed browser requests").toEqual([]);
 });
 
 test("all declared route families support direct load and hard refresh", async ({ page }) => {
@@ -112,6 +128,46 @@ test("all declared route families support direct load and hard refresh", async (
       await expect(page.locator("main"), route).toBeVisible();
       await page.reload({ waitUntil: "domcontentloaded" });
       await expect(page.locator("main"), `${route} hard refresh`).toBeVisible();
+    });
+  }
+
+  const operationsRoutes: Array<{ role: Role; route: string }> = [
+    { role: "leadership", route: "/beheer" },
+    { role: "leadership", route: "/beheer/toernooileiding" },
+    { role: "leadership", route: "/beheer/toernooileiding/toernooien" },
+    { role: "leadership", route: "/beheer/toernooileiding/wedstrijden" },
+    { role: "leadership", route: "/beheer/toernooileiding/bracket" },
+    { role: "leadership", route: "/beheer/toernooileiding/spelerscontrole" },
+    { role: "leadership", route: "/beheer/toernooileiding/uitslagen" },
+    { role: "leadership", route: "/beheer/toernooileiding/tucht" },
+    { role: "leadership", route: "/beheer/toernooileiding/audit" },
+    { role: "leadership", route: "/beheer/toernooileiding/privacy" },
+    { role: "leadership", route: "/beheer/berichten" },
+    { role: "leadership", route: "/beheer/media" },
+    { role: "matchops", route: "/beheer/wedstrijdleiding" },
+    { role: "matchops", route: "/beheer/wedstrijdleiding/wedstrijden" },
+    { role: "matchops", route: "/beheer/wedstrijdleiding/incidenten" },
+    { role: "association", route: "/beheer/vereniging" },
+    { role: "association", route: "/beheer/vereniging/teams" },
+    { role: "association", route: "/beheer/vereniging/spelerslijsten" },
+    { role: "association", route: "/beheer/vereniging/profiel" },
+    { role: "team", route: "/beheer/team" },
+    { role: "team", route: "/beheer/team/spelerslijst" },
+    { role: "team", route: "/beheer/team/wedstrijden/match_qf_1/opstelling" },
+    { role: "referee", route: "/beheer/scheidsrechter" },
+    { role: "referee", route: "/beheer/scheidsrechter/wedstrijden/match_qf_1/controle" },
+    { role: "referee", route: "/beheer/scheidsrechter/wedstrijden/match_qf_1/rapport" },
+    { role: "press", route: "/beheer/pers" },
+    { role: "photographer", route: "/beheer/fotograaf" },
+  ];
+  for (const item of operationsRoutes) {
+    await test.step(item.route, async () => {
+      await setRole(page, item.role);
+      const response = await page.goto(item.route, { waitUntil: "domcontentloaded" });
+      expect(response?.status(), item.route).toBe(200);
+      await expect(page.locator("main"), item.route).toBeVisible();
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.locator("main"), `${item.route} hard refresh`).toBeVisible();
     });
   }
 });

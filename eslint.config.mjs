@@ -8,6 +8,8 @@ export default defineConfig([
   globalIgnores([
     ".next/**",
     "node_modules/**",
+    "playwright-report/**",
+    "test-results/**",
     "starter/**",
     "references/**",
     "public/reference/**",

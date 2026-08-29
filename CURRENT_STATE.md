@@ -1,4 +1,4 @@
-# Current State and Intended Continuation
+# Current DEV state
 
 ## What is included and verified
 
@@ -20,21 +20,25 @@ The later live Sites prototype had been published previously, but its generated 
 
 The packaged static prototype is older and less premium. It is included because its routes and basic interactions are a useful functional reference. It is not the final architecture or quality target.
 
-If a newer Next.js TournamentOS repository already exists on the DEV VPS, Codex must continue that repository and apply this package’s assets/requirements rather than starting over.
+The local Next.js application is now the authoritative DEV prototype. The static starter remains historical reference material and must not overwrite it.
 
-## What Codex must complete
+## Completed locally
 
-- A maintainable application implementation on the DEV VPS.
-- Shared domain data and persistent demo state.
-- Full public routes, bracket, Match Centre and club/community modules.
-- HV Next personal dashboard.
-- Tournament leadership, association manager, team manager and referee dashboards.
-- Complete roster/photo/lineup/T-60/official-result journey.
-- All visible controls and state families.
-- Responsive, accessibility, permission and build verification.
-- Traceability, decisions, build report and unexecuted deployment runbook.
+- One shared, file-backed, deterministic domain state for public, personal and operational surfaces.
+- Public Editorial/Tournament Arena/Match Centre/Football Network routes and HV Next.
+- Eight scoped demo roles, including distinct match-operations, press and photographer experiences.
+- Versioned rules, player lifecycle, immutable lineups, two-team T-60, live events, interruption decisions, result confirmations/disputes, discipline and bracket progression.
+- Rights-aware media moderation, privacy projections, server-side authorization and security-event auditability.
+- Twenty-one unit/permission tests and nine Chromium browser tests, including 77 route/viewport checks.
+- Reference-aligned public homepage, local hero/social assets and updated traceability, decisions, QA evidence, build report and authorized deployment runbook.
+
+## Known production gaps
+
+- Demo identity/role switching is not a production identity provider or MFA solution.
+- Browser push delivery is simulated; no service worker or delivery provider is connected.
+- Media upload persists safe metadata only; binary storage, malware checks and EXIF stripping remain production work.
+- Native device, non-Chromium and screen-reader lab passes remain outstanding.
 
 ## Quality target
 
 The output should look like a top-tier European sports product agency prototype and remain technically plausible for a real engineering team. Premium means controlled hierarchy, grid precision, authentic football context, coherent data and polished behavior—not just gradients, glass or rounded cards.
-

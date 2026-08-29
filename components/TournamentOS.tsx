@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   Bell,
-  ChevronRight,
-  CircleUserRound,
+  House,
   Menu,
+  Newspaper,
+  Radio,
   Search,
   ShieldCheck,
+  Sparkles,
   Trophy,
   X,
 } from "lucide-react";
@@ -62,6 +64,10 @@ const knownExact = new Set([
   "/beheer/toernooileiding/uitslagen",
   "/beheer/toernooileiding/tucht",
   "/beheer/toernooileiding/audit",
+  "/beheer/toernooileiding/privacy",
+  "/beheer/wedstrijdleiding",
+  "/beheer/wedstrijdleiding/wedstrijden",
+  "/beheer/wedstrijdleiding/incidenten",
   "/beheer/vereniging",
   "/beheer/vereniging/teams",
   "/beheer/vereniging/spelerslijsten",
@@ -69,6 +75,8 @@ const knownExact = new Set([
   "/beheer/team",
   "/beheer/team/spelerslijst",
   "/beheer/scheidsrechter",
+  "/beheer/pers",
+  "/beheer/fotograaf",
   "/beheer/berichten",
   "/beheer/media",
 ]);
@@ -90,6 +98,10 @@ export function TournamentOS({ path }: { path: string }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<{ tone: "ok" | "error"; message: string } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [online, setOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
 
   const operations = path.startsWith("/beheer");
   const load = async () => {
@@ -103,6 +115,16 @@ export function TournamentOS({ path }: { path: string }) {
   };
 
   useEffect(() => {
+    const update = () => setOnline(navigator.onLine);
+    window.addEventListener("online", update);
+    window.addEventListener("offline", update);
+    return () => {
+      window.removeEventListener("online", update);
+      window.removeEventListener("offline", update);
+    };
+  }, []);
+
+  useEffect(() => {
     let active = true;
     fetch(`/api/state?surface=${operations ? "operations" : "public"}`, { cache: "no-store" })
       .then(async (response) => {
@@ -111,16 +133,19 @@ export function TournamentOS({ path }: { path: string }) {
       })
       .then((json) => {
         if (active) {
+          setLoadError("");
           setRole(json.role);
           setData(json.data);
         }
       })
       .catch((error: unknown) => {
-        if (active)
+        if (active) {
+          setLoadError(error instanceof Error ? error.message : "Laden mislukt.");
           setToast({
             tone: "error",
             message: error instanceof Error ? error.message : "Laden mislukt.",
           });
+        }
       });
     return () => {
       active = false;
@@ -180,6 +205,17 @@ export function TournamentOS({ path }: { path: string }) {
   );
 
   if (!data) {
+    if (loadError)
+      return (
+        <main className="loading-screen permission-state" role="alert">
+          <ShieldCheck size={44} />
+          <h1>Toernooidata niet beschikbaar</h1>
+          <p>{loadError}</p>
+          <button className="button" onClick={() => window.location.reload()}>
+            Probeer opnieuw
+          </button>
+        </main>
+      );
     return (
       <main className="loading-screen" aria-live="polite">
         <Image
@@ -187,13 +223,22 @@ export function TournamentOS({ path }: { path: string }) {
           alt="Haaglanden Voetbal"
           width={180}
           height={85}
-          priority
+          loading="eager"
         />
         <span className="spinner spinner--large" />
         <p>Toernooidata laden…</p>
       </main>
     );
   }
+
+  const tickerMatches = ["match_live_1", "match_qf_2", "match_qf_4"]
+    .map((id) => data.matches.find((match) => match.id === id))
+    .filter((match) => match !== undefined);
+  const tickerTeamName = (teamId: string | null) =>
+    data.teams
+      .find((team) => team.id === teamId)
+      ?.name.replace(/^SVV /, "")
+      .replace(/ 1$/, "") ?? "N.t.b.";
 
   return (
     <div className={operations ? "product product--operations" : "product"}>
@@ -208,7 +253,7 @@ export function TournamentOS({ path }: { path: string }) {
               alt="Haaglanden Voetbal"
               width={174}
               height={82}
-              priority
+              loading="eager"
             />
             <span className="brand__product">TournamentOS</span>
           </Link>
@@ -249,16 +294,26 @@ export function TournamentOS({ path }: { path: string }) {
         </div>
       </header>
 
+      {!online ? (
+        <div className="offline-banner" role="status">
+          Offline · getoonde informatie kan verouderd zijn. Mutaties worden niet als geslaagd
+          weergegeven.
+        </div>
+      ) : null}
+
       <div className="live-strip" aria-label="Live score ticker">
         <div className="container live-strip__inner">
-          <span>
+          <span className="live-strip__label">
             <span className="live-dot" /> LIVE
           </span>
-          <strong>HBS 2–2 Scheveningen</strong>
-          <span>78′</span>
-          <Link href="/wedstrijden">
-            Alle wedstrijden <ChevronRight size={15} />
-          </Link>
+          {tickerMatches.map((match) => (
+            <Link className="live-strip__match" href="/wedstrijden" key={match.id}>
+              <small>{match.status === "LIVE" ? `${match.minute ?? 0}′` : "AFG"}</small>
+              <span>{tickerTeamName(match.homeTeamId)}</span>
+              <strong>{match.score ? `${match.score.home}–${match.score.away}` : "–"}</strong>
+              <span>{tickerTeamName(match.awayTeamId)}</span>
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -369,24 +424,30 @@ export function TournamentOS({ path }: { path: string }) {
       ) : null}
 
       <nav className="bottom-nav" aria-label="Mobiele navigatie">
-        <Link href="/">
-          <Trophy size={19} />
+        <Link className={path === "/" ? "active" : ""} href="/">
+          <House size={21} />
           Home
         </Link>
-        <Link href="/wedstrijden">
-          <span aria-hidden="true">●</span>Live
+        <Link className={path.startsWith("/wedstrijden") ? "active" : ""} href="/wedstrijden">
+          <Radio size={21} />
+          Live
         </Link>
-        <Link href="/toernooien">
-          <Trophy size={19} />
+        <Link className={path.startsWith("/toernooien") ? "active" : ""} href="/toernooien">
+          <Trophy size={21} />
           Cups
         </Link>
-        <Link href="/meldingen">
-          <Bell size={19} />
-          Meldingen
+        <Link className={path.startsWith("/nieuws") ? "active" : ""} href="/nieuws">
+          <Newspaper size={21} />
+          Nieuws
         </Link>
-        <Link href="/account">
-          <CircleUserRound size={19} />
-          Meer
+        <Link
+          className={
+            path === "/account" || path.startsWith("/next") || path === "/meldingen" ? "active" : ""
+          }
+          href="/account"
+        >
+          <Sparkles size={21} />
+          Mijn
         </Link>
       </nav>
 

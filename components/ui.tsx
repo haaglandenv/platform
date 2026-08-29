@@ -42,11 +42,15 @@ export function PlayerPhoto({ name, size = "md" }: { name: string; size?: "sm" |
 
 export function StatusBadge({ status }: { status: string }) {
   const normalized = status.toLowerCase();
-  const tone = /officieel|goedgekeurd|gereed|akkoord|finished/.test(normalized)
+  const tone = /officieel|goedgekeurd|gereed|akkoord|finished|allowed|bevestigd|opgelost/.test(
+    normalized,
+  )
     ? "success"
     : /live/.test(normalized)
       ? "live"
-      : /gestaakt|afgekeurd|incident|cancelled/.test(normalized)
+      : /gestaakt|afgekeurd|incident|cancelled|denied|geweigerd|uitgesloten|stopped/.test(
+            normalized,
+          )
         ? "danger"
         : /wacht|incompleet|afwijking|actie|voorlopig|postponed/.test(normalized)
           ? "warning"

@@ -1,12 +1,106 @@
-import type { Match, Player, Role, RuntimeData, SeedData } from "@/lib/types";
+import type { Match, Player, Role, RuntimeData, SeedData, TournamentRules } from "@/lib/types";
 
 export const roleLabels: Record<Role, string> = {
   leadership: "Toernooileiding",
+  matchops: "Wedstrijdleiding",
   association: "Verenigingsmanager",
   team: "Teammanager",
   referee: "Scheidsrechter",
+  press: "Pers / Redactie",
+  photographer: "Fotograaf",
   supporter: "Supporter",
 };
+
+export const defaultRules: TournamentRules = {
+  version: 1,
+  effectiveFrom: "2026-08-01",
+  category: "A",
+  format: "11X11",
+  minimumAge: 18,
+  birthYearFrom: 1980,
+  birthYearTo: 2008,
+  maxDispensations: 3,
+  halfDurationMinutes: 45,
+  halves: 2,
+  timeoutsPerTeam: 0,
+  starterCount: 11,
+  maxSquadSize: 18,
+  substitutions: "MAX_5",
+  extraTimeRounds: ["FINAL"],
+  penaltiesAfterDraw: true,
+  yellowCardsForSuspension: 3,
+  refereeType: "NEUTRAL",
+  assistantsRequired: 2,
+  standardMatchDay: "Zaterdag",
+  standardKickoff: "20:00",
+  finalExtraTimeMinutes: 30,
+};
+
+const extendedDemoRoles: SeedData["roles"] = [
+  { id: "role_matchops", label: "Wedstrijdleiding" },
+  { id: "role_press", label: "Pers / Redactie" },
+  { id: "role_photographer", label: "Fotograaf" },
+];
+
+const extendedDemoUsers: SeedData["demoUsers"] = [
+  {
+    id: "user_matchops",
+    email: "wedstrijdleiding@demo.tournamentos.local",
+    name: "Demo Wedstrijdleiding",
+    roleId: "role_matchops",
+    scopeIds: ["tournament_swc_2026", "match_qf_1"],
+  },
+  {
+    id: "user_press",
+    email: "pers@demo.tournamentos.local",
+    name: "Demo Redactie",
+    roleId: "role_press",
+    scopeIds: ["tournament_swc_2026"],
+  },
+  {
+    id: "user_photographer",
+    email: "foto@demo.tournamentos.local",
+    name: "Demo Fotograaf",
+    roleId: "role_photographer",
+    scopeIds: ["match_qf_1"],
+  },
+];
+
+const quickPlayerSpecs = [
+  ["Bram de Wit", "1997-01-12", "Keeper"],
+  ["Jens Mulder", "1999-03-04", "Verdediger"],
+  ["Ravi de Jong", "1998-07-16", "Verdediger"],
+  ["Tobias Meijer", "2000-11-22", "Verdediger"],
+  ["Samir Haddad", "1996-05-10", "Verdediger"],
+  ["Luuk Smit", "2001-02-18", "Middenvelder"],
+  ["Adam El Idrissi", "2002-09-01", "Middenvelder"],
+  ["Joris van Dam", "1999-12-14", "Middenvelder"],
+  ["Daan van Meer", "1998-04-21", "Aanvaller"],
+  ["Noah Verhoeven", "2000-06-30", "Aanvaller"],
+  ["Rachid Azzam", "1997-10-08", "Aanvaller"],
+  ["Stijn Vos", "2003-03-12", "Keeper"],
+  ["Mats Hendriks", "2001-08-25", "Verdediger"],
+  ["Ismail Kaya", "1999-09-19", "Middenvelder"],
+  ["Koen Blom", "2002-01-05", "Verdediger"],
+  ["Youssef Amrani", "2000-10-27", "Middenvelder"],
+  ["Niek Prins", "2001-04-11", "Aanvaller"],
+  ["Mo El Kharfi", "1998-12-03", "Aanvaller"],
+] as const;
+
+const quickPlayers: Player[] = quickPlayerSpecs.map(([name, dateOfBirth, position], index) => {
+  const number = index + 1;
+  return {
+    id: `p_q_${String(number).padStart(2, "0")}`,
+    teamId: "team_quick_1",
+    name,
+    reference: `HV-Q${2000 + number}`,
+    dateOfBirth,
+    shirtNumber: number,
+    position,
+    photo: "/brand/player-placeholder.svg",
+    consent: true,
+  };
+});
 
 export function defaultRuntime(): RuntimeData {
   return {
@@ -14,8 +108,23 @@ export function defaultRuntime(): RuntimeData {
     rosterStatus: "INCOMPLEET",
     lineupStatus: "NIET_GESTART",
     selectedPlayerIds: [],
+    homeSelectedPlayerIds: Array.from(
+      { length: 18 },
+      (_, index) => `p_q_${String(index + 1).padStart(2, "0")}`,
+    ),
+    lineupSnapshot: {
+      version: 0,
+      starters: [],
+      substitutes: [],
+      captainId: null,
+      goalkeeperId: null,
+    },
     checks: {},
+    checkNotes: {},
     discrepancy: "NONE",
+    playerApprovals: {},
+    rules: { ...defaultRules },
+    regulationHistory: [{ ...defaultRules }],
     favorites: ["club_duindorp", "tournament_swc_2026"],
     votes: [],
     notificationSettings: { match: true, news: true, club: true },
@@ -58,7 +167,22 @@ export function defaultRuntime(): RuntimeData {
     ],
     mediaSubmissions: [],
     matchReport: { publicSummary: "", internalNote: "" },
-    resultConfirmations: { home: false, away: false },
+    resultConfirmations: { referee: false, home: false, away: false },
+    resultDispute: { open: false, note: "" },
+    matchEvents: [],
+    matchMetrics: {
+      match_live_1: {
+        possession: { home: 54, away: 46 },
+        shots: { home: 12, away: 8 },
+      },
+    },
+    interruptionSnapshots: [],
+    fixtureChangeRequests: [],
+    disciplinaryCases: [],
+    suspendedPlayerIds: [],
+    securityEvents: [],
+    pressPermissions: { names: true, shirtNumbers: true, lineups: true, media: true },
+    pushPermission: "DEFAULT",
     draftTournaments: [],
     teamAssignment: "Demo Teammanager",
     clubProfile: {
@@ -72,7 +196,70 @@ export function defaultRuntime(): RuntimeData {
 }
 
 export function hydrateState(seed: SeedData): SeedData & { runtime: RuntimeData } {
-  return { ...seed, runtime: { ...defaultRuntime(), ...seed.runtime } };
+  const expandedSeed: SeedData = {
+    ...seed,
+    clubs: seed.clubs.map((club) => ({
+      ...club,
+      crest:
+        club.crest === "/assets/brand/club-placeholder.svg"
+          ? "/brand/club-placeholder.svg"
+          : club.crest,
+    })),
+    roles: [
+      ...seed.roles,
+      ...extendedDemoRoles.filter((role) => !seed.roles.some((item) => item.id === role.id)),
+    ],
+    demoUsers: [
+      ...seed.demoUsers,
+      ...extendedDemoUsers.filter((user) => !seed.demoUsers.some((item) => item.id === user.id)),
+    ],
+    players: [
+      ...seed.players.map((player) => ({
+        ...player,
+        photo:
+          player.photo === "/assets/brand/player-placeholder.svg"
+            ? "/brand/player-placeholder.svg"
+            : player.photo,
+      })),
+      ...quickPlayers.filter((player) => !seed.players.some((item) => item.id === player.id)),
+    ],
+  };
+  const defaults = defaultRuntime();
+  const incoming = expandedSeed.runtime;
+  const playerApprovals = Object.fromEntries(
+    expandedSeed.players
+      .filter((player) => player.teamId === "team_duindorp_1")
+      .map((player) => [
+        player.id,
+        {
+          status: player.reference && player.photo ? "CONCEPT" : "AANVULLING_NODIG",
+        } as const,
+      ]),
+  );
+  return {
+    ...expandedSeed,
+    runtime: {
+      ...defaults,
+      ...incoming,
+      notificationSettings: {
+        ...defaults.notificationSettings,
+        ...incoming?.notificationSettings,
+      },
+      resultConfirmations: {
+        ...defaults.resultConfirmations,
+        ...incoming?.resultConfirmations,
+      },
+      resultDispute: { ...defaults.resultDispute, ...incoming?.resultDispute },
+      matchMetrics: { ...defaults.matchMetrics, ...incoming?.matchMetrics },
+      lineupSnapshot: { ...defaults.lineupSnapshot, ...incoming?.lineupSnapshot },
+      rules: { ...defaults.rules, ...incoming?.rules },
+      pressPermissions: { ...defaults.pressPermissions, ...incoming?.pressPermissions },
+      playerApprovals: {
+        ...playerApprovals,
+        ...incoming?.playerApprovals,
+      },
+    },
+  };
 }
 
 export function validateRoster(players: Player[]) {
@@ -117,12 +304,47 @@ export function validateEligibility(
   return { valid: errors.length === 0, errors };
 }
 
-export function validateLineup(selectedIds: string[], players: Player[]) {
+export function evaluateRules(
+  players: Player[],
+  rules: TournamentRules,
+  options: { asOf?: string; suspendedPlayerIds?: string[] } = {},
+) {
+  const errors = validateEligibility(
+    players,
+    options.asOf ?? "2026-09-12",
+    rules.minimumAge,
+    options.suspendedPlayerIds ?? [],
+  ).errors;
+  const warnings: string[] = [];
+  const dispensations = players.filter((player) => player.dispensation);
+  if (dispensations.length > rules.maxDispensations) {
+    errors.push(
+      `Maximaal ${rules.maxDispensations} dispensaties toegestaan; ${dispensations.length} geselecteerd.`,
+    );
+  } else if (dispensations.length) {
+    warnings.push(`${dispensations.length}/${rules.maxDispensations} dispensaties gebruikt.`);
+  }
+  for (const player of players) {
+    const year = Number(player.dateOfBirth.slice(0, 4));
+    if (year < rules.birthYearFrom || year > rules.birthYearTo) {
+      warnings.push(`${player.name}: geboortejaar ${year} valt buiten de standaardbandbreedte.`);
+    }
+  }
+  return { valid: errors.length === 0, errors, warnings };
+}
+
+export function validateLineup(
+  selectedIds: string[],
+  players: Player[],
+  rules: Pick<TournamentRules, "starterCount" | "maxSquadSize"> = defaultRules,
+) {
   const known = new Set(players.map((player) => player.id));
   const unknown = selectedIds.filter((id) => !known.has(id));
   const errors: string[] = [];
-  if (selectedIds.length < 11) errors.push("Selecteer minimaal 11 spelers.");
-  if (selectedIds.length > 18) errors.push("Selecteer maximaal 18 spelers.");
+  if (selectedIds.length < rules.starterCount)
+    errors.push(`Selecteer minimaal ${rules.starterCount} spelers.`);
+  if (selectedIds.length > rules.maxSquadSize)
+    errors.push(`Selecteer maximaal ${rules.maxSquadSize} spelers.`);
   if (new Set(selectedIds).size !== selectedIds.length)
     errors.push("Een speler kan maar één keer worden geselecteerd.");
   if (unknown.length) errors.push("De selectie bevat een speler buiten het goedgekeurde team.");
@@ -209,17 +431,33 @@ export function canAccessRoute(role: Role, path: string) {
     return role !== "supporter";
   const boundaries: Array<[string, Role]> = [
     ["/beheer/toernooileiding", "leadership"],
+    ["/beheer/wedstrijdleiding", "matchops"],
     ["/beheer/vereniging", "association"],
     ["/beheer/team", "team"],
     ["/beheer/scheidsrechter", "referee"],
+    ["/beheer/pers", "press"],
+    ["/beheer/fotograaf", "photographer"],
   ];
-  return boundaries.some(([prefix, allowed]) => path.startsWith(prefix) && role === allowed);
+  const boundaryAllowed = boundaries.some(
+    ([prefix, allowed]) => path.startsWith(prefix) && role === allowed,
+  );
+  if (!boundaryAllowed) return false;
+  if (
+    (role === "team" || role === "referee") &&
+    path.includes("/wedstrijden/") &&
+    !path.includes("/wedstrijden/match_qf_1/")
+  )
+    return false;
+  return true;
 }
 
 export const actionRoles: Record<string, Role[]> = {
   "fix-player": ["team"],
+  "save-player": ["team"],
+  "remove-player": ["team"],
   "submit-roster": ["team"],
   "approve-roster": ["leadership"],
+  "review-player": ["leadership"],
   "request-correction": ["association", "leadership"],
   "submit-lineup": ["team"],
   "open-t60": ["referee"],
@@ -227,26 +465,77 @@ export const actionRoles: Record<string, Role[]> = {
   "check-all": ["referee"],
   "resolve-discrepancy": ["leadership"],
   "approve-lineups": ["referee"],
-  "start-match": ["leadership"],
+  "start-match": ["leadership", "matchops"],
+  "add-match-event": ["referee", "matchops"],
+  "correct-match-event": ["referee", "matchops"],
+  "interrupt-match": ["referee", "matchops", "leadership"],
+  "decide-incident": ["leadership"],
+  "decide-discipline": ["leadership"],
   "submit-result": ["referee"],
   "confirm-team-result": ["team"],
+  "confirm-home-result": ["matchops"],
+  "dispute-result": ["team"],
+  "resolve-result-dispute": ["leadership"],
   "confirm-result": ["leadership"],
   "create-tournament": ["leadership"],
   "assign-team": ["leadership"],
   "update-fixture": ["leadership"],
+  "request-fixture-change": ["team", "association", "matchops"],
+  "approve-fixture-change-opponent": ["matchops"],
+  "approve-fixture-change-leadership": ["leadership"],
   "regulatory-result": ["leadership"],
-  "match-state": ["leadership"],
+  "match-state": ["leadership", "matchops"],
+  "save-rules": ["leadership"],
   "save-club-profile": ["association"],
   "toggle-exclusion": ["association"],
   "finalize-tournament": ["leadership"],
   "lock-season": ["leadership"],
   "send-message": ["leadership", "association", "team", "referee"],
-  "submit-media": ["leadership", "association", "team", "referee", "supporter"],
+  "submit-media": [
+    "leadership",
+    "matchops",
+    "association",
+    "team",
+    "referee",
+    "press",
+    "photographer",
+    "supporter",
+  ],
+  "moderate-media": ["press"],
+  "set-press-permissions": ["leadership"],
   follow: ["leadership", "association", "team", "referee", "supporter"],
   vote: ["leadership", "association", "team", "referee", "supporter"],
   "mark-read": ["leadership", "association", "team", "referee", "supporter"],
-  preference: ["leadership", "association", "team", "referee", "supporter"],
-  "set-clock": ["leadership", "association", "team", "referee", "supporter"],
+  preference: [
+    "leadership",
+    "matchops",
+    "association",
+    "team",
+    "referee",
+    "press",
+    "photographer",
+    "supporter",
+  ],
+  "set-push": [
+    "leadership",
+    "matchops",
+    "association",
+    "team",
+    "referee",
+    "press",
+    "photographer",
+    "supporter",
+  ],
+  "set-clock": [
+    "leadership",
+    "matchops",
+    "association",
+    "team",
+    "referee",
+    "press",
+    "photographer",
+    "supporter",
+  ],
 };
 
 export function authorizeAction(role: Role, action: string) {

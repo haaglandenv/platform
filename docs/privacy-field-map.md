@@ -12,9 +12,22 @@
 | Club contact details              | Never                | Never                    | Purpose-based         | Own club                  | Own team contacts          | Assigned fixture contacts     |
 | Audit/security events             | Never                | Personal read state only | Scoped audit          | Own club events           | Own team events            | Own assignment events         |
 
+Additional operational roles:
+
+| Field/data                     | Wedstrijdleiding                         | Pers / Redactie                                     | Fotograaf                              |
+| ------------------------------ | ---------------------------------------- | --------------------------------------------------- | -------------------------------------- |
+| Match, score and public events | Assigned tournament/match                | Published match scope                               | Assigned match                         |
+| Player name/number/position    | Operational match need                   | Only when the corresponding publication right is on | Never through the photography endpoint |
+| DOB/reference/private photo    | Never                                    | Never                                               | Never                                  |
+| Lineup                         | Readiness status, no identity documents  | Only when publication right is on                   | Never                                  |
+| Internal report/security data  | Assigned incident decisions, no raw IDs  | Never                                               | Never                                  |
+| Media                          | Moderation metadata and rights decisions | Approved media only                                 | Own submission metadata until approved |
+
 Implementation evidence:
 
 - `GET /api/state?surface=public` uses `publicProjection` and serializes no players, rosters, DOBs or reference IDs.
 - Operations responses are projected by the HTTP-only role cookie and record scope.
 - Action authorization is server-side in addition to route/control visibility.
+- Copied record IDs and cross-role actions are denied server-side and recorded in the security-event log.
+- The press projection independently gates names, shirt numbers, lineups and approved media.
 - Public player fallback says `Geen openbaar spelersprofiel beschikbaar`.

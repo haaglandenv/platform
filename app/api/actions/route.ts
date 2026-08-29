@@ -4,9 +4,9 @@ import { z } from "zod";
 import {
   authorizeAction,
   canApproveLineupChecks,
+  evaluateRules,
   recalculateBracket,
   setResult,
-  validateEligibility,
   validateLineup,
   validateRoster,
 } from "@/lib/domain";
@@ -19,6 +19,17 @@ const requestSchema = z.object({
   action: z.string().min(1),
   payload: z.record(z.string(), z.unknown()).default({}),
 });
+
+const roleSchema = z.enum([
+  "leadership",
+  "matchops",
+  "association",
+  "team",
+  "referee",
+  "press",
+  "photographer",
+  "supporter",
+]);
 
 function audit(
   state: SeedData & { runtime: NonNullable<SeedData["runtime"]> },
@@ -38,6 +49,10 @@ function audit(
     before,
     after,
     reason,
+    version: Math.max(
+      state.runtime.lineupSnapshot.version,
+      ...state.rosters.map((roster) => roster.version),
+    ),
   };
   state.runtime.audit.unshift(event);
 }
@@ -60,6 +75,16 @@ function notify(
 }
 
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  const requestHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  if (origin && requestHost) {
+    try {
+      if (new URL(origin).host !== requestHost)
+        return NextResponse.json({ error: "Ongeldige aanvraagbron." }, { status: 403 });
+    } catch {
+      return NextResponse.json({ error: "Ongeldige aanvraagbron." }, { status: 403 });
+    }
+  }
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Ongeldige actie." }, { status: 400 });
   const { action, payload } = parsed.data;
@@ -69,8 +94,18 @@ export async function POST(request: Request) {
   }
 
   const jar = await cookies();
-  const role = (jar.get("hv-demo-role")?.value ?? "supporter") as Role;
+  const role = roleSchema.catch("supporter").parse(jar.get("hv-demo-role")?.value) as Role;
   if (!authorizeAction(role, action)) {
+    await mutateState((draft) => {
+      draft.runtime.securityEvents.unshift({
+        id: `security-${Date.now()}-${draft.runtime.securityEvents.length + 1}`,
+        timestamp: new Date().toISOString(),
+        role,
+        action,
+        outcome: "DENIED",
+        detail: "Actie buiten de server-side rolpolicy geweigerd.",
+      });
+    });
     return NextResponse.json(
       { error: "Je huidige demo-rol heeft geen toegang tot deze actie." },
       { status: 403 },
@@ -82,6 +117,20 @@ export async function POST(request: Request) {
       const runtime = draft.runtime;
       const scenarioMatch = draft.matches.find((match) => match.id === draft.scenario.matchId);
       if (!scenarioMatch) throw new Error("Scenario-wedstrijd ontbreekt.");
+      if (
+        runtime.seasonLocked &&
+        ![
+          "follow",
+          "vote",
+          "mark-read",
+          "preference",
+          "set-push",
+          "send-message",
+          "submit-media",
+          "moderate-media",
+        ].includes(action)
+      )
+        throw new Error("Het seizoen is vergrendeld; sportieve mutaties zijn geblokkeerd.");
       switch (action) {
         case "set-clock": {
           const preset = z.enum(["preT60", "t60", "live78", "postMatch"]).parse(payload.preset);
@@ -99,8 +148,82 @@ export async function POST(request: Request) {
           }
           player.reference = String(payload.reference).trim();
           player.photo = "/brand/player-placeholder.svg";
+          player.consent = true;
           runtime.rosterStatus = "CONCEPT";
+          runtime.playerApprovals[player.id] = { status: "CONCEPT" };
           audit(draft, role, "PLAYER_COMPLETED", player.id, "INCOMPLEET", "COMPLEET");
+          break;
+        }
+        case "save-player": {
+          if (!(["INCOMPLEET", "CONCEPT"] as string[]).includes(runtime.rosterStatus))
+            throw new Error("Een ingediende of goedgekeurde spelerslijst is onveranderlijk.");
+          const id = payload.id ? String(payload.id) : `p_ds_${Date.now()}`;
+          const existing = draft.players.find((player) => player.id === id);
+          if (existing && existing.teamId !== "team_duindorp_1")
+            throw new Error("Deze speler valt buiten de teamscope.");
+          const parsedPlayer = {
+            id,
+            teamId: "team_duindorp_1",
+            name: z.string().min(2).max(100).parse(payload.name),
+            reference: z.string().min(4).max(40).parse(payload.reference),
+            dateOfBirth: z
+              .string()
+              .regex(/^\d{4}-\d{2}-\d{2}$/)
+              .parse(payload.dateOfBirth),
+            shirtNumber: z.coerce.number().int().min(1).max(99).parse(payload.shirtNumber),
+            position: z
+              .enum(["Keeper", "Verdediger", "Middenvelder", "Aanvaller"])
+              .parse(payload.position),
+            photo:
+              payload.photoProvided === true
+                ? "/brand/player-placeholder.svg"
+                : (existing?.photo ?? null),
+            consent: z.literal(true).parse(payload.consent),
+            dispensation: Boolean(payload.dispensation),
+          };
+          if (!parsedPlayer.photo) throw new Error("Een actuele pasfoto is verplicht.");
+          const duplicate = draft.players.find(
+            (player) =>
+              player.id !== id &&
+              player.teamId === "team_duindorp_1" &&
+              (player.reference === parsedPlayer.reference ||
+                player.shirtNumber === parsedPlayer.shirtNumber),
+          );
+          if (duplicate)
+            throw new Error(`Dubbele identiteit of rugnummer gedetecteerd bij ${duplicate.name}.`);
+          if (existing) Object.assign(existing, parsedPlayer);
+          else draft.players.push(parsedPlayer);
+          runtime.rosterStatus = "CONCEPT";
+          runtime.playerApprovals[id] = { status: "CONCEPT" };
+          audit(
+            draft,
+            role,
+            existing ? "PLAYER_UPDATED" : "PLAYER_ADDED",
+            id,
+            existing ? "DRAFT" : "NONE",
+            "CONCEPT",
+          );
+          break;
+        }
+        case "remove-player": {
+          if (!(["INCOMPLEET", "CONCEPT"] as string[]).includes(runtime.rosterStatus))
+            throw new Error("Een ingediende of goedgekeurde spelerslijst is onveranderlijk.");
+          const id = z.string().min(2).parse(payload.id);
+          const player = draft.players.find(
+            (item) => item.id === id && item.teamId === "team_duindorp_1",
+          );
+          if (!player) throw new Error("Speler niet gevonden binnen de teamscope.");
+          draft.players = draft.players.filter((item) => item.id !== id);
+          delete runtime.playerApprovals[id];
+          audit(
+            draft,
+            role,
+            "PLAYER_REMOVED",
+            id,
+            "CONCEPT",
+            "REMOVED",
+            String(payload.reason ?? "ROSTER_CORRECTION"),
+          );
           break;
         }
         case "submit-roster": {
@@ -123,6 +246,8 @@ export async function POST(request: Request) {
             submittedAt: new Date().toISOString(),
           });
           runtime.rosterStatus = "INGEDIEND";
+          for (const player of rosterPlayers)
+            runtime.playerApprovals[player.id] = { status: "WACHT_OP_GOEDKEURING" };
           audit(draft, role, "ROSTER_SUBMITTED", "team_duindorp_1", previous, "INGEDIEND");
           notify(
             draft,
@@ -141,7 +266,9 @@ export async function POST(request: Request) {
           );
           const rosterValidation = validateRoster(rosterPlayers);
           if (!rosterValidation.valid) throw new Error(rosterValidation.errors[0]);
-          const eligibility = validateEligibility(rosterPlayers);
+          const eligibility = evaluateRules(rosterPlayers, runtime.rules, {
+            suspendedPlayerIds: runtime.suspendedPlayerIds,
+          });
           if (!eligibility.valid) throw new Error(eligibility.errors[0]);
           runtime.rosterStatus = "GOEDGEKEURD";
           const latest = draft.rosters.at(-1);
@@ -149,6 +276,11 @@ export async function POST(request: Request) {
             latest.status = "GOEDGEKEURD";
             latest.approvedAt = new Date().toISOString();
           }
+          for (const player of rosterPlayers)
+            runtime.playerApprovals[player.id] = {
+              status: "GOEDGEKEURD",
+              reasonCode: "ALL_VALID",
+            };
           audit(
             draft,
             role,
@@ -167,8 +299,52 @@ export async function POST(request: Request) {
           );
           break;
         }
+        case "review-player": {
+          if (runtime.rosterStatus !== "INGEDIEND")
+            throw new Error("Spelers kunnen alleen in een ingediende versie worden beoordeeld.");
+          const playerId = z.string().min(2).parse(payload.playerId);
+          const player = draft.players.find(
+            (item) => item.id === playerId && item.teamId === "team_duindorp_1",
+          );
+          if (!player) throw new Error("Speler niet gevonden binnen de toernooiscope.");
+          const status = z
+            .enum(["GOEDGEKEURD", "AANVULLING_NODIG", "AFGEKEURD"])
+            .parse(payload.status);
+          const reasonCode = z
+            .enum([
+              "ALL_VALID",
+              "PHOTO_INSUFFICIENT",
+              "REFERENCE_MISMATCH",
+              "AGE_EXCEPTION",
+              "DISPENSATION_LIMIT",
+              "SUSPENSION",
+              "OTHER",
+            ])
+            .parse(payload.reasonCode);
+          const note = z
+            .string()
+            .max(300)
+            .parse(payload.note ?? "");
+          if (status !== "GOEDGEKEURD" && note.trim().length < 4)
+            throw new Error("Een toelichting is verplicht bij aanvulling of afwijzing.");
+          runtime.playerApprovals[playerId] = { status, reasonCode, note };
+          audit(
+            draft,
+            role,
+            "PLAYER_REVIEWED",
+            playerId,
+            "WACHT_OP_GOEDKEURING",
+            status,
+            reasonCode,
+          );
+          break;
+        }
         case "request-correction": {
+          if (runtime.rosterStatus !== "INGEDIEND")
+            throw new Error("Alleen een ingediende spelerslijst kan worden teruggestuurd.");
           runtime.rosterStatus = "CONCEPT";
+          const latest = draft.rosters.at(-1);
+          if (latest) latest.status = "WIJZIGING_GEVRAAGD";
           audit(
             draft,
             role,
@@ -193,9 +369,35 @@ export async function POST(request: Request) {
           const selected = Array.isArray(payload.playerIds)
             ? payload.playerIds.map(String)
             : draft.players.slice(0, 18).map((player) => player.id);
-          const result = validateLineup(selected, draft.players);
+          const approvedPlayers = draft.players.filter(
+            (player) =>
+              player.teamId === "team_duindorp_1" &&
+              runtime.playerApprovals[player.id]?.status === "GOEDGEKEURD",
+          );
+          const result = validateLineup(selected, approvedPlayers, runtime.rules);
           if (!result.valid) throw new Error(result.errors[0]);
+          const captainId = z
+            .string()
+            .min(2)
+            .parse(payload.captainId ?? selected[3]);
+          const goalkeeperId = z
+            .string()
+            .min(2)
+            .parse(payload.goalkeeperId ?? selected[0]);
+          if (!selected.includes(captainId) || !selected.includes(goalkeeperId))
+            throw new Error("Keeper en aanvoerder moeten in de wedstrijdselectie staan.");
+          const goalkeeper = approvedPlayers.find((player) => player.id === goalkeeperId);
+          if (goalkeeper?.position !== "Keeper")
+            throw new Error("De aangewezen keeper moet de positie Keeper hebben.");
           runtime.selectedPlayerIds = selected;
+          runtime.lineupSnapshot = {
+            version: runtime.lineupSnapshot.version + 1,
+            starters: selected.slice(0, runtime.rules.starterCount),
+            substitutes: selected.slice(runtime.rules.starterCount),
+            captainId,
+            goalkeeperId,
+            submittedAt: new Date().toISOString(),
+          };
           runtime.lineupStatus = "INGEDIEND";
           runtime.checks = {};
           audit(draft, role, "LINEUP_SUBMITTED", scenarioMatch.id, "CONCEPT", "INGEDIEND");
@@ -217,12 +419,20 @@ export async function POST(request: Request) {
           break;
         }
         case "check-player": {
-          if (!runtime.selectedPlayerIds.includes(String(payload.playerId)))
+          if (
+            ![...runtime.homeSelectedPlayerIds, ...runtime.selectedPlayerIds].includes(
+              String(payload.playerId),
+            )
+          )
             throw new Error("Deze speler staat niet in het vergrendelde wedstrijdsnapshot.");
           const status = z
             .enum(["AKKOORD", "NIET_AANWEZIG", "IDENTITEIT", "AFWIJKING"])
             .parse(payload.status);
           runtime.checks[String(payload.playerId)] = status;
+          runtime.checkNotes[String(payload.playerId)] = z
+            .string()
+            .max(240)
+            .parse(payload.note ?? "");
           if (status === "AFWIJKING") {
             runtime.discrepancy = "OPEN";
             runtime.lineupStatus = "AFWIJKING";
@@ -240,7 +450,8 @@ export async function POST(request: Request) {
         case "check-all": {
           if (runtime.lineupStatus !== "T60_CONTROLE")
             throw new Error("Open eerst de T-60-controle.");
-          for (const id of runtime.selectedPlayerIds) runtime.checks[id] = "AKKOORD";
+          for (const id of [...runtime.homeSelectedPlayerIds, ...runtime.selectedPlayerIds])
+            runtime.checks[id] = "AKKOORD";
           runtime.checks[draft.scenario.discrepancy.playerId] = "AFWIJKING";
           runtime.discrepancy = "OPEN";
           runtime.lineupStatus = "AFWIJKING";
@@ -286,9 +497,8 @@ export async function POST(request: Request) {
           break;
         }
         case "approve-lineups": {
-          if (
-            !canApproveLineupChecks(runtime.selectedPlayerIds, runtime.checks, runtime.discrepancy)
-          ) {
+          const allSelected = [...runtime.homeSelectedPlayerIds, ...runtime.selectedPlayerIds];
+          if (!canApproveLineupChecks(allSelected, runtime.checks, runtime.discrepancy)) {
             throw new Error(
               runtime.discrepancy === "OPEN"
                 ? "Los eerst de open afwijking op."
@@ -309,6 +519,224 @@ export async function POST(request: Request) {
           audit(draft, role, "MATCH_STARTED", scenarioMatch.id, "PRE_MATCH", "LIVE");
           break;
         }
+        case "add-match-event": {
+          if (!(["LIVE", "HALF_TIME"] as string[]).includes(scenarioMatch.status))
+            throw new Error(
+              "Gebeurtenissen kunnen alleen tijdens een live wedstrijd worden vastgelegd.",
+            );
+          const type = z
+            .enum(["GOAL", "YELLOW", "RED", "SUBSTITUTION", "HALF_TIME", "RESUMED"])
+            .parse(payload.type);
+          const minute = z.coerce.number().int().min(0).max(130).parse(payload.minute);
+          const teamId = payload.teamId ? String(payload.teamId) : undefined;
+          if (teamId && ![scenarioMatch.homeTeamId, scenarioMatch.awayTeamId].includes(teamId))
+            throw new Error("Het team hoort niet bij deze wedstrijd.");
+          const playerId = payload.playerId ? String(payload.playerId) : undefined;
+          const relatedPlayerId = payload.relatedPlayerId
+            ? String(payload.relatedPlayerId)
+            : undefined;
+          const allowedPlayerIds = new Set([
+            ...runtime.homeSelectedPlayerIds,
+            ...runtime.selectedPlayerIds,
+          ]);
+          if (playerId && !allowedPlayerIds.has(playerId))
+            throw new Error("De speler staat niet in het vergrendelde wedstrijdsnapshot.");
+          if (relatedPlayerId && !allowedPlayerIds.has(relatedPlayerId))
+            throw new Error("De wisselspeler staat niet in het vergrendelde wedstrijdsnapshot.");
+          const player = playerId ? draft.players.find((item) => item.id === playerId) : undefined;
+          if (teamId && player && player.teamId !== teamId)
+            throw new Error("Speler en team komen niet overeen.");
+          const event = {
+            id: `match-event-${Date.now()}-${runtime.matchEvents.length + 1}`,
+            matchId: scenarioMatch.id,
+            minute,
+            type,
+            teamId,
+            playerId,
+            relatedPlayerId,
+            note: z
+              .string()
+              .max(240)
+              .parse(payload.note ?? ""),
+          } as const;
+          runtime.matchEvents.push(event);
+          scenarioMatch.minute = minute;
+          if (type === "GOAL") {
+            const goals = runtime.matchEvents.filter(
+              (item) => item.type === "GOAL" && !item.corrected,
+            );
+            scenarioMatch.score = {
+              home: goals.filter((item) => item.teamId === scenarioMatch.homeTeamId).length,
+              away: goals.filter((item) => item.teamId === scenarioMatch.awayTeamId).length,
+            };
+          }
+          if (type === "HALF_TIME") scenarioMatch.status = "HALF_TIME";
+          if (type === "RESUMED") scenarioMatch.status = "LIVE";
+          if (type === "YELLOW" || type === "RED") {
+            runtime.disciplinaryCases.push({
+              id: `discipline-${Date.now()}`,
+              matchId: scenarioMatch.id,
+              playerId: event.playerId,
+              type,
+              status: "OPEN",
+              summary: `${type === "YELLOW" ? "Gele" : "Rode"} kaart in minuut ${minute}`,
+            });
+            if (
+              type === "RED" &&
+              event.playerId &&
+              !runtime.suspendedPlayerIds.includes(event.playerId)
+            )
+              runtime.suspendedPlayerIds.push(event.playerId);
+          }
+          audit(draft, role, "MATCH_EVENT_ADDED", event.id, "NONE", type);
+          break;
+        }
+        case "correct-match-event": {
+          const eventId = z.string().min(3).parse(payload.eventId);
+          const event = runtime.matchEvents.find((item) => item.id === eventId);
+          if (!event || event.matchId !== scenarioMatch.id)
+            throw new Error("Wedstrijdgebeurtenis niet gevonden binnen de wedstrijdscope.");
+          if (scenarioMatch.official) throw new Error("Een officiële wedstrijd is vergrendeld.");
+          event.corrected = true;
+          const goals = runtime.matchEvents.filter(
+            (item) => item.type === "GOAL" && !item.corrected,
+          );
+          scenarioMatch.score = {
+            home: goals.filter((item) => item.teamId === scenarioMatch.homeTeamId).length,
+            away: goals.filter((item) => item.teamId === scenarioMatch.awayTeamId).length,
+          };
+          audit(
+            draft,
+            role,
+            "MATCH_EVENT_CORRECTED",
+            eventId,
+            event.type,
+            "CORRECTED",
+            String(payload.reason ?? "REGISTRATION_ERROR"),
+          );
+          break;
+        }
+        case "interrupt-match": {
+          if (scenarioMatch.official) throw new Error("Een officiële wedstrijd is vergrendeld.");
+          if (!scenarioMatch.score) scenarioMatch.score = { home: 0, away: 0 };
+          const snapshot = {
+            id: `interruption-${Date.now()}`,
+            matchId: scenarioMatch.id,
+            type: z.enum(["TEMPORARY", "FINAL"]).parse(payload.type),
+            reason: z.string().min(4).max(240).parse(payload.reason),
+            minute: z.coerce.number().int().min(0).max(130).parse(payload.minute),
+            score: { ...scenarioMatch.score },
+            possession: z.string().min(2).max(80).parse(payload.possession),
+            lastRestart: z.string().min(2).max(120).parse(payload.lastRestart),
+            lastKickoff: z.string().min(2).max(120).parse(payload.lastKickoff),
+            playersOnField: Array.isArray(payload.playersOnField)
+              ? payload.playersOnField.map(String)
+              : [],
+            cards: Array.isArray(payload.cards) ? payload.cards.map(String) : [],
+            substitutions: Array.isArray(payload.substitutions)
+              ? payload.substitutions.map(String)
+              : [],
+            comments: z
+              .string()
+              .max(500)
+              .parse(payload.comments ?? ""),
+            refereeReport: z.string().min(4).max(1000).parse(payload.refereeReport),
+            createdAt: new Date().toISOString(),
+          } as const;
+          runtime.interruptionSnapshots.push(snapshot);
+          scenarioMatch.status = "STOPPED";
+          scenarioMatch.minute = snapshot.minute;
+          runtime.disciplinaryCases.push({
+            id: `incident-${Date.now()}`,
+            matchId: scenarioMatch.id,
+            type: "INCIDENT",
+            status: "OPEN",
+            summary: snapshot.reason,
+          });
+          audit(
+            draft,
+            role,
+            "MATCH_INTERRUPTED",
+            scenarioMatch.id,
+            "LIVE",
+            snapshot.type,
+            snapshot.reason,
+          );
+          notify(
+            draft,
+            "leadership",
+            "Stakingsdossier vereist besluit",
+            `${snapshot.minute}′ · ${snapshot.reason}`,
+            "/beheer/toernooileiding/tucht",
+          );
+          break;
+        }
+        case "decide-incident": {
+          const snapshot = runtime.interruptionSnapshots.at(-1);
+          if (!snapshot) throw new Error("Er is geen stakingssnapshot om te besluiten.");
+          const decision = z
+            .enum([
+              "RESUME_NOW",
+              "REMAINING_TIME_LATER",
+              "REPLAY",
+              "KEEP_RESULT",
+              "REGULATORY_RESULT",
+              "EXCLUDE_TEAM",
+              "OTHER",
+            ])
+            .parse(payload.decision);
+          const reason = z.string().min(8).max(500).parse(payload.reason);
+          snapshot.decision = decision;
+          snapshot.decisionReason = reason;
+          const incident = runtime.disciplinaryCases.find(
+            (item) =>
+              item.matchId === scenarioMatch.id &&
+              item.type === "INCIDENT" &&
+              item.status === "OPEN",
+          );
+          if (incident) {
+            incident.status = "DECIDED";
+            incident.decision = `${decision}: ${reason}`;
+          }
+          if (decision === "RESUME_NOW") scenarioMatch.status = "LIVE";
+          if (decision === "REMAINING_TIME_LATER" || decision === "REPLAY")
+            scenarioMatch.status = "SCHEDULED";
+          audit(draft, role, "INCIDENT_DECIDED", snapshot.id, "OPEN", decision, reason);
+          notify(
+            draft,
+            "all",
+            "Besluit gestaakte wedstrijd",
+            "Het verdere verloop is door de toernooicommissie vastgesteld.",
+            "/wedstrijden/quick-duindorp-sv",
+          );
+          break;
+        }
+        case "decide-discipline": {
+          const disciplinaryCase = runtime.disciplinaryCases.find(
+            (item) => item.id === String(payload.caseId),
+          );
+          if (!disciplinaryCase || disciplinaryCase.status !== "OPEN")
+            throw new Error("Open tuchtzaak niet gevonden.");
+          const decision = z.string().min(8).max(500).parse(payload.decision);
+          disciplinaryCase.status = "DECIDED";
+          disciplinaryCase.decision = decision;
+          if (
+            Boolean(payload.suspend) &&
+            disciplinaryCase.playerId &&
+            !runtime.suspendedPlayerIds.includes(disciplinaryCase.playerId)
+          )
+            runtime.suspendedPlayerIds.push(disciplinaryCase.playerId);
+          audit(
+            draft,
+            role,
+            "DISCIPLINARY_CASE_DECIDED",
+            disciplinaryCase.id,
+            "OPEN",
+            "DECIDED",
+            decision,
+          );
+          break;
+        }
         case "submit-result": {
           if (runtime.lineupStatus !== "AKKOORD")
             throw new Error("De wedstrijd is nog niet officieel vrijgegeven.");
@@ -323,7 +751,46 @@ export async function POST(request: Request) {
               .max(500)
               .parse(payload.internalNote ?? ""),
           };
-          runtime.resultConfirmations = { home: true, away: false };
+          runtime.resultConfirmations = { referee: true, home: false, away: false };
+          runtime.resultDispute = { open: false, note: "" };
+          if (!runtime.matchEvents.some((event) => event.type === "GOAL" && !event.corrected)) {
+            runtime.matchEvents.push(
+              {
+                id: "seeded-goal-quick-18",
+                matchId: scenarioMatch.id,
+                minute: 18,
+                type: "GOAL",
+                teamId: scenarioMatch.homeTeamId ?? undefined,
+              },
+              {
+                id: "seeded-goal-duindorp-55",
+                matchId: scenarioMatch.id,
+                minute: 55,
+                type: "GOAL",
+                teamId: scenarioMatch.awayTeamId ?? undefined,
+              },
+              {
+                id: "seeded-goal-quick-82",
+                matchId: scenarioMatch.id,
+                minute: 82,
+                type: "GOAL",
+                teamId: scenarioMatch.homeTeamId ?? undefined,
+              },
+            );
+          }
+          const registeredGoals = runtime.matchEvents.filter(
+            (event) => event.type === "GOAL" && !event.corrected,
+          );
+          const registeredScore = {
+            home: registeredGoals.filter((event) => event.teamId === scenarioMatch.homeTeamId)
+              .length,
+            away: registeredGoals.filter((event) => event.teamId === scenarioMatch.awayTeamId)
+              .length,
+          };
+          if (registeredScore.home !== 2 || registeredScore.away !== 1)
+            throw new Error(
+              `De uitslag 2–1 sluit niet aan op de geregistreerde goals (${registeredScore.home}–${registeredScore.away}).`,
+            );
           const updated = setResult(draft, { home: 2, away: 1 }, false);
           Object.assign(draft, updated);
           audit(draft, role, "RESULT_SUBMITTED", scenarioMatch.id, "LIVE", "FINISHED_PROVISIONAL");
@@ -339,6 +806,8 @@ export async function POST(request: Request) {
         case "confirm-team-result": {
           if (scenarioMatch.status !== "FINISHED_PROVISIONAL")
             throw new Error("Er is geen voorlopige uitslag om te bevestigen.");
+          if (runtime.resultDispute.open)
+            throw new Error("Het uitslagconflict moet eerst worden opgelost.");
           runtime.resultConfirmations.away = true;
           audit(
             draft,
@@ -357,11 +826,72 @@ export async function POST(request: Request) {
           );
           break;
         }
+        case "confirm-home-result": {
+          if (scenarioMatch.status !== "FINISHED_PROVISIONAL")
+            throw new Error("Er is geen voorlopige uitslag om te bevestigen.");
+          runtime.resultConfirmations.home = true;
+          audit(
+            draft,
+            role,
+            "HOME_TEAM_RESULT_CONFIRMED",
+            scenarioMatch.id,
+            "AWAITING_HOME",
+            "HOME_CONFIRMED",
+          );
+          notify(
+            draft,
+            "leadership",
+            "Quick bevestigde de uitslag",
+            "De bevestiging van Duindorp SV is nog vereist.",
+            "/beheer/toernooileiding/uitslagen",
+          );
+          break;
+        }
+        case "dispute-result": {
+          if (scenarioMatch.status !== "FINISHED_PROVISIONAL")
+            throw new Error("Alleen een voorlopige uitslag kan worden betwist.");
+          const note = z.string().min(8).max(500).parse(payload.note);
+          runtime.resultDispute = { open: true, note };
+          runtime.resultConfirmations.away = false;
+          audit(
+            draft,
+            role,
+            "RESULT_DISPUTED",
+            scenarioMatch.id,
+            "AWAITING_AWAY",
+            "DISPUTED",
+            note,
+          );
+          notify(
+            draft,
+            "leadership",
+            "Uitslagconflict vereist beoordeling",
+            note,
+            "/beheer/toernooileiding/uitslagen",
+          );
+          break;
+        }
+        case "resolve-result-dispute": {
+          if (!runtime.resultDispute.open) throw new Error("Er is geen open uitslagconflict.");
+          const resolution = z.string().min(8).max(500).parse(payload.resolution);
+          runtime.resultDispute = { ...runtime.resultDispute, open: false, resolution };
+          audit(
+            draft,
+            role,
+            "RESULT_DISPUTE_RESOLVED",
+            scenarioMatch.id,
+            "DISPUTED",
+            "RESOLVED",
+            resolution,
+          );
+          break;
+        }
         case "confirm-result": {
           if (scenarioMatch.status !== "FINISHED_PROVISIONAL")
             throw new Error("Er is geen voorlopige uitslag om te bevestigen.");
           if (!runtime.resultConfirmations.home || !runtime.resultConfirmations.away)
             throw new Error("Wacht op bevestiging van beide teams.");
+          if (runtime.resultDispute.open) throw new Error("Los eerst het open uitslagconflict op.");
           const updated = setResult(draft, { home: 2, away: 1 }, true);
           Object.assign(draft, updated);
           runtime.lineupStatus = "OFFICIEEL";
@@ -407,6 +937,7 @@ export async function POST(request: Request) {
             throw new Error("Een officiële wedstrijd is vergrendeld voor programmawijzigingen.");
           const kickoff = z.string().datetime({ offset: true }).parse(payload.kickoff);
           const venue = z.string().min(4).max(120).parse(payload.venue);
+          const reason = z.string().min(8).max(300).parse(payload.reason);
           const previous = `${scenarioMatch.kickoff} · ${scenarioMatch.venue}`;
           scenarioMatch.kickoff = kickoff;
           scenarioMatch.venue = venue;
@@ -417,13 +948,101 @@ export async function POST(request: Request) {
             scenarioMatch.id,
             previous,
             `${kickoff} · ${venue}`,
-            "SCHEDULE_CHANGE",
+            reason,
           );
           notify(
             draft,
             "all",
             "Wedstrijdgegevens bijgewerkt",
             "Bekijk de actuele aftrap en locatie.",
+            "/wedstrijden/quick-duindorp-sv",
+          );
+          break;
+        }
+        case "request-fixture-change": {
+          if (scenarioMatch.official)
+            throw new Error("Een officiële wedstrijd is vergrendeld voor wijzigingen.");
+          const proposedKickoff = z.string().datetime({ offset: true }).parse(payload.kickoff);
+          const proposedVenue = z.string().min(4).max(120).parse(payload.venue);
+          const reason = z.string().min(8).max(300).parse(payload.reason);
+          runtime.fixtureChangeRequests.push({
+            id: `change-${Date.now()}`,
+            matchId: scenarioMatch.id,
+            proposedKickoff,
+            proposedVenue,
+            reason,
+            opponentApproved: false,
+            leadershipApproved: false,
+            status: "REQUESTED",
+          });
+          audit(
+            draft,
+            role,
+            "FIXTURE_CHANGE_REQUESTED",
+            scenarioMatch.id,
+            scenarioMatch.kickoff,
+            proposedKickoff,
+            reason,
+          );
+          notify(
+            draft,
+            "matchops",
+            "Wedstrijdwijziging wacht op tegenstander",
+            `${proposedKickoff} · ${proposedVenue}`,
+            "/beheer/wedstrijdleiding",
+          );
+          break;
+        }
+        case "approve-fixture-change-opponent": {
+          const request = runtime.fixtureChangeRequests.find(
+            (item) => item.id === String(payload.requestId),
+          );
+          if (!request || request.status !== "REQUESTED")
+            throw new Error("Open wijzigingsverzoek niet gevonden.");
+          request.opponentApproved = true;
+          request.status = "OPPONENT_APPROVED";
+          audit(
+            draft,
+            role,
+            "FIXTURE_CHANGE_OPPONENT_APPROVED",
+            request.id,
+            "REQUESTED",
+            "OPPONENT_APPROVED",
+          );
+          notify(
+            draft,
+            "leadership",
+            "Wedstrijdwijziging klaar voor besluit",
+            request.reason,
+            "/beheer/toernooileiding/wedstrijden",
+          );
+          break;
+        }
+        case "approve-fixture-change-leadership": {
+          const request = runtime.fixtureChangeRequests.find(
+            (item) => item.id === String(payload.requestId),
+          );
+          if (!request || request.status !== "OPPONENT_APPROVED")
+            throw new Error("De tegenstander moet eerst akkoord zijn.");
+          request.leadershipApproved = true;
+          request.status = "APPROVED";
+          const previous = `${scenarioMatch.kickoff} · ${scenarioMatch.venue}`;
+          scenarioMatch.kickoff = request.proposedKickoff;
+          scenarioMatch.venue = request.proposedVenue;
+          audit(
+            draft,
+            role,
+            "FIXTURE_CHANGE_APPROVED",
+            request.id,
+            previous,
+            `${scenarioMatch.kickoff} · ${scenarioMatch.venue}`,
+            request.reason,
+          );
+          notify(
+            draft,
+            "all",
+            "Wedstrijd definitief gewijzigd",
+            "Aftrap en locatie zijn bijgewerkt.",
             "/wedstrijden/quick-duindorp-sv",
           );
           break;
@@ -484,6 +1103,89 @@ export async function POST(request: Request) {
           );
           break;
         }
+        case "save-rules": {
+          if (runtime.seasonLocked) throw new Error("Het seizoen is vergrendeld.");
+          const nextRules = {
+            version: runtime.rules.version + 1,
+            effectiveFrom: z
+              .string()
+              .regex(/^\d{4}-\d{2}-\d{2}$/)
+              .parse(payload.effectiveFrom),
+            category: z.enum(["A", "B"]).parse(payload.category),
+            format: z.enum(["6X6", "8X8", "11X11"]).parse(payload.format),
+            minimumAge: z.coerce.number().int().min(5).max(60).parse(payload.minimumAge),
+            birthYearFrom: z.coerce.number().int().min(1950).max(2030).parse(payload.birthYearFrom),
+            birthYearTo: z.coerce.number().int().min(1950).max(2030).parse(payload.birthYearTo),
+            maxDispensations: z.coerce
+              .number()
+              .int()
+              .min(0)
+              .max(10)
+              .parse(payload.maxDispensations),
+            halfDurationMinutes: z.coerce
+              .number()
+              .int()
+              .min(10)
+              .max(60)
+              .parse(payload.halfDurationMinutes),
+            halves: z.coerce.number().int().min(1).max(4).parse(payload.halves),
+            timeoutsPerTeam: z.coerce.number().int().min(0).max(3).parse(payload.timeoutsPerTeam),
+            starterCount: z.coerce.number().int().min(6).max(11).parse(payload.starterCount),
+            maxSquadSize: z.coerce.number().int().min(6).max(30).parse(payload.maxSquadSize),
+            substitutions: z.enum(["DOORLOPEND", "MAX_5"]).parse(payload.substitutions),
+            extraTimeRounds: Array.isArray(payload.extraTimeRounds)
+              ? payload.extraTimeRounds.map(String)
+              : [],
+            penaltiesAfterDraw: Boolean(payload.penaltiesAfterDraw),
+            yellowCardsForSuspension: z.coerce
+              .number()
+              .int()
+              .min(1)
+              .max(5)
+              .parse(payload.yellowCardsForSuspension),
+            refereeType: z.enum(["NEUTRAL", "CLUB"]).parse(payload.refereeType),
+            assistantsRequired: z.coerce
+              .number()
+              .int()
+              .min(0)
+              .max(4)
+              .parse(payload.assistantsRequired),
+            standardMatchDay: z.string().min(2).max(30).parse(payload.standardMatchDay),
+            standardKickoff: z
+              .string()
+              .regex(/^\d{2}:\d{2}$/)
+              .parse(payload.standardKickoff),
+            finalExtraTimeMinutes: z.coerce
+              .number()
+              .int()
+              .min(0)
+              .max(60)
+              .parse(payload.finalExtraTimeMinutes),
+          };
+          if (nextRules.birthYearFrom > nextRules.birthYearTo)
+            throw new Error("Het eerste geboortejaar moet vóór het laatste geboortejaar liggen.");
+          if (nextRules.starterCount > nextRules.maxSquadSize)
+            throw new Error("Het aantal basisspelers kan niet groter zijn dan de selectie.");
+          runtime.rules = nextRules;
+          runtime.regulationHistory.push(nextRules);
+          audit(
+            draft,
+            role,
+            "REGULATION_VERSION_CREATED",
+            "tournament_swc_2026",
+            `v${nextRules.version - 1}`,
+            `v${nextRules.version}`,
+            "CONFIGURATION_UPDATE",
+          );
+          notify(
+            draft,
+            "all",
+            "Nieuwe reglementversie vastgesteld",
+            `Versie ${nextRules.version} geldt vanaf ${nextRules.effectiveFrom}.`,
+            "/toernooien/sir-winston-cup/reglement",
+          );
+          break;
+        }
         case "save-club-profile": {
           runtime.clubProfile.venueNote = String(payload.venueNote ?? "").slice(0, 140);
           runtime.clubProfile.contactVisible = Boolean(payload.contactVisible);
@@ -539,17 +1241,74 @@ export async function POST(request: Request) {
           const name = z.string().min(2).max(120).parse(payload.name);
           if (payload.consent !== true)
             throw new Error("Toestemming voor redactionele beoordeling is verplicht.");
+          const matchId = z.string().default("match_qf_1").parse(payload.matchId);
+          if (!draft.matches.some((match) => match.id === matchId))
+            throw new Error("Wedstrijd niet gevonden binnen de mediascope.");
+          const clubId = payload.clubId ? String(payload.clubId) : undefined;
+          if (clubId && !draft.clubs.some((club) => club.id === clubId))
+            throw new Error("Club niet gevonden binnen de mediascope.");
+          const rights = {
+            website: payload.website !== false,
+            articles: payload.articles !== false,
+            social: payload.social === true,
+          };
+          if (!rights.website && !rights.articles && !rights.social)
+            throw new Error("Kies minimaal één toegestaan publicatiekanaal.");
           runtime.mediaSubmissions.unshift({
             id: `media-${Date.now()}`,
             name,
             consent: true,
             status: "IN_MODERATIE",
+            matchId,
+            clubId,
+            uploaderRole: role,
+            rights,
+            credit: z
+              .string()
+              .max(100)
+              .parse(payload.credit ?? "Demo-inzender"),
           });
           audit(draft, role, "MEDIA_SUBMITTED", "community-media", "draft", "IN_MODERATIE");
           break;
         }
+        case "moderate-media": {
+          const item = runtime.mediaSubmissions.find(
+            (submission) => submission.id === String(payload.id),
+          );
+          if (!item || item.status !== "IN_MODERATIE")
+            throw new Error("Open media-item niet gevonden.");
+          const status = z.enum(["GOEDGEKEURD", "AFGEKEURD"]).parse(payload.status);
+          const reason = z.string().min(4).max(300).parse(payload.reason);
+          item.status = status;
+          audit(draft, role, "MEDIA_MODERATED", item.id, "IN_MODERATIE", status, reason);
+          break;
+        }
+        case "set-press-permissions": {
+          runtime.pressPermissions = {
+            names: Boolean(payload.names),
+            shirtNumbers: Boolean(payload.shirtNumbers),
+            lineups: Boolean(payload.lineups),
+            media: Boolean(payload.media),
+          };
+          audit(
+            draft,
+            role,
+            "PRESS_PERMISSIONS_UPDATED",
+            "tournament_swc_2026",
+            "PREVIOUS",
+            "UPDATED",
+            "PRIVACY_POLICY",
+          );
+          break;
+        }
         case "follow": {
           const id = z.string().min(2).parse(payload.id);
+          const followableIds = new Set([
+            ...draft.clubs.map((club) => club.id),
+            ...draft.tournaments.map((tournament) => tournament.id),
+            ...draft.matches.map((match) => match.id),
+          ]);
+          if (!followableIds.has(id)) throw new Error("Dit item kan niet worden gevolgd.");
           runtime.favorites = runtime.favorites.includes(id)
             ? runtime.favorites.filter((item) => item !== id)
             : [...runtime.favorites, id];
@@ -557,13 +1316,16 @@ export async function POST(request: Request) {
         }
         case "vote": {
           const id = z.string().min(2).parse(payload.id);
+          if (id !== "photo-week") throw new Error("Deze stemoptie bestaat niet.");
           if (!runtime.votes.includes(id)) runtime.votes.push(id);
           break;
         }
         case "mark-read": {
           const id = z.string().min(1).parse(payload.id);
           const item = runtime.notifications.find((notification) => notification.id === id);
-          if (item) item.read = true;
+          if (!item || (item.role !== "all" && item.role !== role))
+            throw new Error("Melding niet gevonden binnen de rolscope.");
+          item.read = true;
           break;
         }
         case "preference": {
@@ -571,8 +1333,24 @@ export async function POST(request: Request) {
           runtime.notificationSettings[key] = Boolean(payload.value);
           break;
         }
+        case "set-push": {
+          runtime.pushPermission = z.enum(["ENABLED", "DENIED"]).parse(payload.permission);
+          break;
+        }
         default:
           throw new Error("Onbekende actie.");
+      }
+      if (
+        !["follow", "vote", "mark-read", "preference", "set-clock", "set-push"].includes(action)
+      ) {
+        runtime.securityEvents.unshift({
+          id: `security-${Date.now()}-${runtime.securityEvents.length + 1}`,
+          timestamp: new Date().toISOString(),
+          role,
+          action,
+          outcome: "ALLOWED",
+          detail: "Server-side rolpolicy en payloadvalidatie doorlopen.",
+        });
       }
       Object.assign(draft, recalculateBracket(draft));
     });

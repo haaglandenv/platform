@@ -1,8 +1,15 @@
 import { expect, test } from "@playwright/test";
 
 test("public core routes render and mobile bracket stays within the viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Hier wordt/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /De strijd om de Sir Winston Cup/i }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Zoeken" })).toBeVisible();
+  await expect(page.getByLabel("Live score ticker")).toContainText("HBS");
+  await expect(page.getByLabel("Mobiele navigatie")).toContainText("Nieuws");
+  await expect(page.getByLabel(/Uitgelichte wedstrijd HBS/i)).toContainText("54–46%");
   await page.goto("/toernooien/sir-winston-cup/bracket");
   await expect(page.getByRole("heading", { name: "Knock-outschema" })).toBeVisible();
   await page.setViewportSize({ width: 360, height: 800 });

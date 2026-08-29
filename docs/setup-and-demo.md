@@ -46,29 +46,37 @@ Both commands restore the same golden baseline:
 
 Open `/inloggen` or `/beheer` and use `Demo: wissel rol`.
 
-| Role               | Entry route               | Scope                              |
-| ------------------ | ------------------------- | ---------------------------------- |
-| Supporter          | `/next`                   | Public + personal demo preferences |
-| Toernooileiding    | `/beheer/toernooileiding` | Sir Winston Cup                    |
-| Verenigingsmanager | `/beheer/vereniging`      | Duindorp SV                        |
-| Teammanager        | `/beheer/team`            | Duindorp SV 1                      |
-| Scheidsrechter     | `/beheer/scheidsrechter`  | Quick–Duindorp SV                  |
+| Role               | Entry route                | Scope                               |
+| ------------------ | -------------------------- | ----------------------------------- |
+| Supporter          | `/next`                    | Public + personal demo preferences  |
+| Toernooileiding    | `/beheer/toernooileiding`  | Sir Winston Cup                     |
+| Wedstrijdleiding   | `/beheer/wedstrijdleiding` | Wedstrijddag + Quick–Duindorp SV    |
+| Verenigingsmanager | `/beheer/vereniging`       | Duindorp SV                         |
+| Teammanager        | `/beheer/team`             | Duindorp SV 1                       |
+| Scheidsrechter     | `/beheer/scheidsrechter`   | Quick–Duindorp SV                   |
+| Pers / Redactie    | `/beheer/pers`             | Publiceerbare toernooi-informatie   |
+| Fotograaf          | `/beheer/fotograaf`        | Eigen inzendingen voor de wedstrijd |
 
 The selected role is stored in an HTTP-only, same-site demo cookie. Server API actions still verify the role. This is a review mechanism, not production identity/authentication.
 
 ## Golden journey
 
-1. Teammanager → `Spelerslijst`: add local preview and `HV-D1018`, save, submit v2.
-2. Toernooileiding → `Spelerscontrole`: approve the submitted roster.
-3. Teammanager → `Opstelling`: select all 18 seeded players and lock.
-4. Scheidsrechter → choose demo clock `t60`, open the T-60 snapshot and run the seeded check.
-5. Toernooileiding → resolve the 10/20 discrepancy using the reason code.
-6. Scheidsrechter → approve both lineups.
-7. Toernooileiding → start the match.
-8. Scheidsrechter → submit the 2–1 provisional report.
-9. Teammanager → confirm the provisional result on the team dashboard.
-10. Toernooileiding → make the result official.
-11. Review Match Centre, bracket, HV Next and audit log.
+1. Teammanager → `Spelerslijst`: add the local preview and `HV-D1018`, save, then submit v2.
+2. Toernooileiding → `Spelerscontrole`: review individual eligibility and bulk-approve the roster.
+3. Teammanager → `Opstelling`: select 18 players, choose keeper/captain and lock the snapshot.
+4. Scheidsrechter → demo clock `t60`: open both exact lineups, complete checks and record notes.
+5. Toernooileiding → resolve the seeded 10/20 discrepancy with a structured reason code.
+6. Scheidsrechter → approve both lineups; Wedstrijdleiding → start the match.
+7. Scheidsrechter → record two home goals, one away goal, yellow/red events and a temporary interruption.
+8. Toernooileiding → decide to resume; Scheidsrechter → submit the split public/private report and 2–1 result.
+9. Teammanager confirms away; Wedstrijdleiding confirms home; Toernooileiding resolves any dispute and finalizes.
+10. Verify the official score/winner in Match Centre and bracket, then inspect audit/security events.
+
+Additional review paths:
+
+- Teammanager requests a fixture change; Wedstrijdleiding records opponent approval; Toernooileiding gives final approval.
+- Fotograaf submits rights metadata; Toernooileiding moderates; Pers sees only approved, permitted fields.
+- Toernooileiding saves a new rules version and verifies the effective public rules page.
 
 ## Environment variables
 

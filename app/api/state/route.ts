@@ -6,7 +6,16 @@ import type { Role } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-const roles: Role[] = ["leadership", "association", "team", "referee", "supporter"];
+const roles: Role[] = [
+  "leadership",
+  "matchops",
+  "association",
+  "team",
+  "referee",
+  "press",
+  "photographer",
+  "supporter",
+];
 
 export async function GET(request: NextRequest) {
   const jar = await cookies();
