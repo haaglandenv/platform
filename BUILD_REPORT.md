@@ -1,4 +1,4 @@
-# TournamentOS production-candidate build report — deployment authorized
+# TournamentOS production build report — deployed and verified
 
 Date: 2026-08-29
 
@@ -12,7 +12,7 @@ A reviewable TournamentOS application was completed locally in the existing DEV 
 
 The prior application already provided a polished visual shell. This build retained that work and completed the deeper roster, rules, two-team T-60, live event, interruption, result, discipline, fixture-change, press, photography, privacy and audit workflows. A final visual audit against two user-supplied mobile captures then realigned the public homepage around the intended dark photographic hero, uppercase editorial headline, multi-score ticker, lime CTA, overlapping live match card and five-item Home/Live/Cups/Nieuws/Mijn navigation.
 
-The handoff, historical starter and original reference material remain available. Push and production deployment of this exact tested candidate were explicitly authorized by the user on 2026-08-29; execution evidence is recorded after the immutable production workflow completes.
+The handoff, historical starter and original reference material remain available. Push and production deployment of this exact tested candidate were explicitly authorized by the user on 2026-08-29 and completed through the immutable repository workflow.
 
 ## Architecture and runtime
 
@@ -87,6 +87,13 @@ npm run dev -- --hostname 127.0.0.1 --port 3100
 
 Use `/inloggen` or `/beheer` to switch the explicit synthetic demo role. Follow `docs/setup-and-demo.md` for the golden journey. Re-run `npm run demo:reset` to return to the review baseline.
 
-## External action status — AUTHORIZED, PENDING EVIDENCE
+## Production deployment evidence
 
-The user explicitly authorized pushing this tested repository state and promoting it through the existing `production` branch workflow on 2026-08-29. The code candidate itself contains no manual VPS, proxy, migration or service-manager mutation. Immutable workflow, runtime revision and live-route evidence are appended after deployment.
+- Deployed code revision: `7b9d83723ff4aa3e9191dc319b09cbb4abb836bf`.
+- Remote `main` and `production` were both fast-forwarded from `e397908ccb2feb96f6ef41622d0eb050e328c062` to that exact tested revision; no force push or history rewrite was used.
+- GitHub Actions run: `33258823206` (`Deploy production`) — success in 1m08s. Runner boundary, locked install, format, lint, typecheck, unit tests, standalone build, VPS activation and public production verification all passed.
+- `GET https://haag.dgwebservices.nl/api/health` returned HTTP 200, service `haaglandencup`, environment `production` and the exact deployed revision.
+- `/`, `/nieuws`, Match Centre, bracket, clubs and `/media/social-preview.png` all returned HTTP 200 after activation.
+- Independent read-only Chromium checks at 390×844 and 1440×900 confirmed the reference-aligned headline, multi-score ticker, live card, responsive navigation, no page-level overflow and no console/page errors.
+
+The deployment made no manual VPS, DNS, proxy, migration or service-manager change. A documentation-only evidence commit follows on `main`; it does not require or trigger a second runtime deployment.

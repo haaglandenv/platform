@@ -20,7 +20,7 @@ The later live Sites prototype had been published previously, but its generated 
 
 The packaged static prototype is older and less premium. It is included because its routes and basic interactions are a useful functional reference. It is not the final architecture or quality target.
 
-The local Next.js application is now the authoritative DEV prototype. The static starter remains historical reference material and must not overwrite it.
+The Next.js application at revision `7b9d83723ff4aa3e9191dc319b09cbb4abb836bf` is the authoritative deployed prototype. The static starter remains historical reference material and must not overwrite it.
 
 ## Completed locally
 
@@ -31,6 +31,7 @@ The local Next.js application is now the authoritative DEV prototype. The static
 - Rights-aware media moderation, privacy projections, server-side authorization and security-event auditability.
 - Twenty-one unit/permission tests and nine Chromium browser tests, including 77 route/viewport checks.
 - Reference-aligned public homepage, local hero/social assets and updated traceability, decisions, QA evidence, build report and authorized deployment runbook.
+- Production deployment through GitHub Actions run `33258823206`, with exact revision health readback and live mobile/desktop browser verification.
 
 ## Known production gaps
 

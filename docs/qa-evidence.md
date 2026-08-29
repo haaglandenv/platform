@@ -62,3 +62,11 @@ The browser suite directly loads and hard-refreshes 24 public route states and 2
 - Real iOS safe-area/PWA installation and non-Chromium engines remain a device/browser lab check.
 - Browser push/service-worker delivery is simulated as an explicit permission state; no external delivery service is connected.
 - Real upload bytes, malware scanning, EXIF stripping and production identity storage are intentionally not implemented in the local demo.
+
+## Production readback — 2026-08-29
+
+- GitHub Actions production run `33258823206` completed successfully for revision `7b9d83723ff4aa3e9191dc319b09cbb4abb836bf`.
+- Live health returned the exact revision with production environment and service identity.
+- Homepage, news, Match Centre, bracket, clubs and social-preview asset returned HTTP 200.
+- Read-only Chromium at 390×844 and 1440×900 confirmed the reference-aligned hero/ticker/live card and correct mobile navigation, with zero horizontal overflow and no console/page errors.
+- Cancelled `_rsc` prefetch requests were observed during browser close/navigation only and match the intentionally excluded Next.js prefetch-cancellation class documented above.

@@ -1,6 +1,6 @@
-# Production deployment runbook — AUTHORIZED, PENDING EXECUTION
+# Production deployment runbook — EXECUTED AND VERIFIED
 
-Status on 2026-08-29: **AUTHORIZED, PENDING EXECUTION**. The user explicitly requested the final detail audit, repository push and production deployment. Only the established fast-forward branch workflow below is authorized; no manual VPS, DNS, proxy, migration or service-manager change is included.
+Status on 2026-08-29: **EXECUTED AND VERIFIED**. The user explicitly requested the final detail audit, repository push and production deployment. Only the established fast-forward branch workflow below was used; no manual VPS, DNS, proxy, migration or service-manager change was made.
 
 ## Contract
 
@@ -38,4 +38,16 @@ This prototype requires no GitHub Secrets or external services.
 
 `GET /api/health` must return HTTP 200 with service `haaglandencup`, environment `production` and the deployed production SHA. The Sites VPS deployment interface owns immutable release activation and rollback; do not modify reverse-proxy or service-manager configuration from this repository.
 
-Candidate-time health checks confirmed that production still served the previous revision `e397908ccb2fd5902fba8d07581ac2693f0a6d96`. Promotion, workflow and final live-route evidence are appended after execution.
+Candidate-time health checks confirmed that production still served the previous revision `e397908ccb2feb96f6ef41622d0eb050e328c062`.
+
+## Execution evidence — 2026-08-29
+
+- Tested/deployed revision: `7b9d83723ff4aa3e9191dc319b09cbb4abb836bf`.
+- `main` push: fast-forward success.
+- `production` push: fast-forward success; this triggered the deployment.
+- GitHub Actions: run `33258823206`, job `99117119756`, successful in 1m08s.
+- Workflow checks: runner boundary, Node 24, locked dependencies, formatting, lint, typecheck, 21 unit tests, standalone build, Sites VPS deployment and public verification all passed.
+- Live health: HTTP 200 with service `haaglandencup`, environment `production` and revision `7b9d83723ff4aa3e9191dc319b09cbb4abb836bf`.
+- Live routes: `/`, `/nieuws`, `/wedstrijden/quick-duindorp-sv`, `/toernooien/sir-winston-cup/bracket`, `/clubs` and `/media/social-preview.png` returned HTTP 200.
+- Read-only Chromium verification at 390×844 and 1440×900 found no horizontal overflow, console errors or page errors.
+- Rollback: not required.
