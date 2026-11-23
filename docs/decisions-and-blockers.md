@@ -1,0 +1,5 @@
+# Keuzes en open koppelingen
+
+De aangeleverde HV Control v18 is een statische Python-build met HTML/CSS/JavaScript. Deze bron is de nieuwe applicatiebasis; de oude remote Next.js-app is op expliciet verzoek vervangen. De visuele Shell en assets blijven behouden. Een Node.js 24 API wordt toegevoegd, zodat web en React Native dezelfde beveiligde acties en data gebruiken. Supabase verzorgt OTP en Postgres-opslag. Een afgeschermd, versieerbaar domeinregister wordt uitsluitend via de server benaderd; clients kunnen geen willekeurige staat uploaden of rollen kiezen. PostgreSQL commit de staat en commando-ontvangst atomair met versiecontrole. Supabase-modus bevat geen synthetische records.
+
+De eigenaar maakt nieuwe Supabase-omgevingen. Project-URL, publishable key, servergeheim, SMTP-inrichting en de eerste beheerdersidentiteit ontbreken nog. Geen bestaand project wordt als tijdelijke invulling gebruikt. De staging-origin en publieke DNS-bestemming zijn nog niet geverifieerd. Doelvoorbereiding activeert geen appservice/proxy/current.

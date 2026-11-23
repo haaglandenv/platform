@@ -1,0 +1,35 @@
+{
+  "name": "haagv-platform",
+  "version": "19.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "packageManager": "npm@11.19.1",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node server/index.mjs",
+    "dev": "node --env-file-if-exists=.env server/index.mjs",
+    "check": "node scripts/check.mjs",
+    "typecheck": "tsc -p tsconfig.client.json --noEmit",
+    "test": "node --test tests/platform/*.test.mjs",
+    "test:db": "node scripts/test-database.mjs",
+    "test:e2e": "node tests/platform/browser.mjs && node tests/platform/browser-chain.mjs && node tests/platform/browser-auth-boundary.mjs",
+    "verify": "npm run check && npm run typecheck && npm test && npm run test:ops && npm run build",
+    "supabase": "supabase",
+    "android:typecheck": "npm --prefix apps/android run typecheck",
+    "test:ops": "python3 -m unittest discover -s ops -p test_ops.py",
+    "preview": "node scripts/local-preview.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "2.119.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@types/node": "24.10.1",
+    "esbuild": "0.28.2",
+    "supabase": "3.3.0",
+    "typescript": "7.0.2"
+  }
+}

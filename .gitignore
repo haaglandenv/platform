@@ -6,3 +6,12 @@ node_modules/
 artifacts/
 __pycache__/
 *.pyc
+dist/
+apps/android/node_modules/
+apps/android/.expo/
+apps/android/dist/
+apps/android/android/
+apps/android/ios/
+apps/android/.export/
+supabase/.temp/
+supabase/.branches/

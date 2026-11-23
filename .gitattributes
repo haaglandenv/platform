@@ -1,0 +1,6 @@
+* text=auto eol=lf
+*.webp -text
+*.woff2 -text
+*.png -text
+*.jpg -text
+assets/font/LICENSE-*.txt binary

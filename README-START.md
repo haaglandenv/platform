@@ -1,73 +1,44 @@
-# HV Control v18 — lokaal overdrachtspakket
+# Haaglanden Voetbal platform
 
-Dit pakket bevat de volledige lokale uitvoering van het Haaglanden Voetbaltoernooi zoals gepubliceerd in versie 18. De broncode komt uit commit `dd384bee966c83bf1daf053dcc4538f8cffa7529` van 23 november 2026. Alle 37 bestanden in `dist/` komen byte voor byte overeen met de gepubliceerde webapp.
+De HV Control v18-huisstijl met een gedeelde Node-API voor web en de toekomstige React Native Android-app. Browserrollen en browserdatabase zijn vervangen door serverautorisatie en Supabase-opslag. De lokale modus bevat één voorbeeld per relevante soort; een nieuw Supabase-project begint leeg.
 
-## Meteen openen
+## Lokaal starten
 
-Pak de hele ZIP uit en open een terminal in de map `HV-Control-v18`. Start de server met Python 3 (3.9 of hoger).
-
-Windows PowerShell:
-
-```powershell
-py -3 -m http.server 4173 --bind 127.0.0.1 --directory dist
-```
-
-macOS, Linux of WSL:
+Node **24.22.1**, npm **11.19.1**, Python **3.12+**. De exacte JavaScript-dependencies staan in `package-lock.json`.
 
 ```sh
-python3 -m http.server 4173 --bind 127.0.0.1 --directory dist
+npm ci
+npm run verify
+npm run dev
 ```
 
-Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/). Laat het terminalvenster open. Stop de server met Ctrl+C. Is poort 4173 in gebruik, kies dan bijvoorbeeld 4174 en pas ook de URL aan. Kies de actieve voorbeeldrol via [Mijn overzicht](http://127.0.0.1:4173/#start).
+Open <http://127.0.0.1:4175/>. Standaard is alleen publiek lezen beschikbaar. Voor lokale beheerproeven: `npm run preview`, daarna **Lokale werkruimte openen**. Deze opdracht maakt een besloten lokale mailversleutelingssleutel aan en weigert een productie-, Supabase- of niet-loopbackomgeving. Die lokale sessie werkt uitsluitend voor de voorbeeldadministratie. Testgegevens en sleutel worden afgeschermd in `.local/` opgeslagen. Alleen `dist/` via een Python-fileserver openen volstaat niet meer: de werkende applicatie vereist de API.
 
-Gebruik HTTP om onder meer de navigatie, browseropslag, media en serviceworker te kunnen gebruiken. De runtime bestaat uit statische bestanden en werkt met de meegeleverde assets. Voor openen zijn Python en een moderne browser voldoende. Node.js is alleen nodig voor de bestaande ontwikkeltests.
+`npm run build` voert de bestaande Python-build uit en bundelt daarna de webcode met esbuild naar `dist/`. `npm start` start dezelfde Node-server die later onder systemd draait. Een build verstuurt geen mail en voert geen migraties of writes naar Supabase uit.
 
-## Codex de overdracht geven
+## Nieuwe Supabase-omgeving aansluiten
 
-Open de uitgepakte map als werkmap in Codex. Geef de opdracht **‘Voer CODEX-OPDRACHT.md uit in deze map’**. Het bestand bevat de startopdracht, herstel- en teststappen, visuele vergelijking en acceptatiecriteria. Codex kan gelijk uit de bron werken en de meegeleverde versie als referentie draaien.
+Volg [Supabase instellen](docs/supabase-setup.md), daarna de [releasevoorbereiding](docs/deployment.md). GitHub gebruikt uitsluitend deze vier publieke variabelen:
 
-| Bestand of map | Inhoud |
-| --- | --- |
-| `dist/` | De direct startbare v18-uitvoer, inclusief manifest en serviceworker. |
-| `dist/assets/` | 17 beeldbestanden, 7 lokale WOFF2-bestanden, 5 fontlicenties en de fontstylesheet. |
-| `pages/`, `*.js`, `*.css` | De originele HTML-fragmenten, stijlen, schermcontrollers, domeinlogica en voorbeeldgegevens. |
-| `build.py` | Combineert de bron tot de webapp. `dist/assets/`, het manifest en de serviceworker zijn ook invoer van de bestaande build. |
-| `docs/` | Functioneel ontwerp, acceptatiechecklist, architectuur, visuele referenties en eerdere controles. |
-| `REFERENTIE.md` | Routeoverzicht, beeldinventaris en uitleg bij de bestaande referentiebeelden. |
-| `tests/` | De 27 oorspronkelijke regressietestbestanden. |
-| `SHA256SUMS`, `scripts/verify_handoff.py` | Controle van bestandshashes, routes, interne doelen en reproduceerbare herbouw. |
+- `HAAGV_APP_ORIGIN`
+- `HAAGV_DATA_MODE`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-## Uitpakken, controleren en bouwen
+De voorbeeldnamen staan ook in `.env.example`. Geheimen staan uitsluitend in de afgeschermde serverruntime. Supabase Auth verstuurt de OTP-codes via Resend SMTP. De overige mail gebruikt de server-side Resend API; een bevoegde beheerder vult de sleutel en afzender in op **Instellingen**. De sleutel wordt versleuteld opgeslagen en is niet terug te lezen. Een Resend-acceptatie is geen bewijs van aflevering.
 
-Controleer de ZIP na uitpakken. `--rebuild` bouwt in een tijdelijke map en vergelijkt de uitvoer met de meegeleverde bestanden. De lokale werkmap blijft bij deze controle intact.
-
-```powershell
-py -3 scripts/verify_handoff.py --rebuild
-```
+## Controle
 
 ```sh
-python3 scripts/verify_handoff.py --rebuild
+npm run verify
+npm run test:db
+npx playwright install chromium
+npm run test:e2e
+npm --prefix apps/android ci
+npm --prefix apps/android run typecheck
+npm --prefix apps/android run bundle
 ```
 
-Voor eigen bronwijzigingen maak je eerst een aparte kopie van de uitgepakte map. Bouw daar met `python3 -X utf8 build.py` en open de nieuwe uitvoer via dezelfde HTTP-opdracht. Op Windows kan `py -3 -X utf8 build.py` een werkende build opleveren met andere regeleinden. Gebruik voor exact dezelfde bytes de meegeleverde verifier of bouw in WSL. Bewaar de meegeleverde `dist/` als ijkpunt. De bundels worden vanuit `pages/` en de rootbron gegenereerd, dus voer structurele aanpassingen daar door.
+De SQL-proef gebruikt uitsluitend een eigen tijdelijke lokale Postgres-container. Auth-, Resend- en UI-tests gebruiken geïsoleerde gegevens; er wordt geen bestaande Supabase-omgeving of mailontvanger geraakt. Zie het actuele [verificatierapport](docs/verification.md) voor wat daadwerkelijk is uitgevoerd en de beperkingen.
 
-Tests uitvoeren vanaf de projectmap, met een moderne Node.js-versie (de pakketcontrole gebruikte Node.js 24):
-
-```powershell
-Get-ChildItem tests -Filter *.test.cjs | ForEach-Object {
-    node $_.FullName
-    if ($LASTEXITCODE -ne 0) { throw "Test mislukt: $($_.Name)" }
-}
-```
-
-```sh
-for test_file in tests/*.test.cjs; do
-  node "$test_file" || exit 1
-done
-```
-
-## Dezelfde weergave vergelijken
-
-Begin met een schoon browserprofiel, dezelfde demo-editie en dezelfde rol. Demowijzigingen blijven lokaal per browserprofiel, host en poort bewaard. Voorbeelden gebruiken dezelfde gegevens als de gepubliceerde v18-bron. Het hosted inlogscherm van Sites hoort bij de hosting. De lokale app opent direct en gebruikt de ingebouwde demorollen. De sportieve en beheerflows gebruiken voorbeeldgegevens en browseropslag.
-
-Vergelijk met dezelfde browser, OS, taal, zoom, schermbreedte, scrollpositie en demostand. De bestanden voor layout, beelden en fonts zijn identiek. Rendering van native datumvelden, scrollbars en letterranden kan verschillen per browser en besturingssysteem.
+De [Android-basis](docs/android.md) deelt API en sessieregels. De oorspronkelijke v18-browserdemo blijft terug te vinden in Git-commit `6f20a058e0e87dbe313fdb82a972a100bda0a256` en in de aparte lokale overdrachtmap. De oude mockmodules, demoportretten en prototype-tests zijn uit de actieve build verwijderd. Functioneel ontwerp en acceptatiechecklist zijn historische productspecificaties; ze zijn geen bewijs van een geslaagde huidige controle.

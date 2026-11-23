@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0e2e22">
+  <meta name="description" content="Haaglanden Voetbal: wedstrijden, clubs en de route naar de beker. Eén gedeelde werkruimte voor de organisatie.">
+  <title>Haaglanden Voetbal · HV Control</title>
+  <link rel="icon" href="assets/hv-app-192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="assets/font/DMSans.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/fonts.css">
+  <link rel="stylesheet" href="site.css">
+  <script type="module" src="site.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Naar de inhoud</a>
+  <header class="hv-top">
+    <div class="hv-top-inner">
+      <a class="hv-brand" href="#home" aria-label="Haaglanden Voetbal · Home"><img src="assets/hv-logo.svg" width="140" height="40" alt="Haaglanden Voetbal"><span>HV Control</span></a>
+      <nav class="hv-nav" aria-label="Hoofdnavigatie">
+        <a href="#home">Home</a><a href="#programma">Programma</a><a href="#schema">Bekerschema</a><a href="#live">Live</a><a href="#nieuws">Nieuws</a><a href="#toernooien">Toernooien</a><a href="#finaledag">Finaledag</a>
+      </nav>
+      <a class="hv-button hv-button-dark" href="#account" data-account-link>Inloggen</a>
+    </div>
+  </header>
+  <div class="platform-context" data-context hidden></div>
+  <main id="main-content" class="hv-main" tabindex="-1">
+    <div data-app><section class="hv-panel platform-loading" role="status"><p class="hv-eyebrow">Haaglanden Voetbal</p><h1>Een moment voor de aftrap.</h1><p>De actuele gegevens worden opgehaald.</p></section></div>
+  </main>
+  <footer class="platform-footer"><div><a href="#home"><img src="assets/hv-logo.svg" width="140" height="40" alt="Haaglanden Voetbal"></a><p>Jouw club. Jouw regio. Jouw beker.</p></div><nav aria-label="Over het platform"><a href="#locaties">Sportparken</a><a href="#reglement">Reglementen</a><a href="#privacy">Publicatie en privacy</a><a href="#handleiding">Hoe werkt het?</a><a href="#instellingen">Instellingen</a></nav><p class="platform-connection" data-connection role="status">Verbinding maken…</p></footer>
+  <div class="toast" data-toast role="status" aria-live="polite" hidden></div>
+  <dialog class="platform-dialog" data-editor aria-labelledby="editor-title"><form data-editor-form novalidate></form></dialog>
+  <noscript><p class="hv-panel">Schakel JavaScript in om actuele gegevens te bekijken en in te loggen.</p></noscript>
+</body>
+</html>
