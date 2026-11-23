@@ -1,0 +1,51 @@
+#nieuwsbeheer .newsroom-toolbar{display:flex;align-items:center;justify-content:space-between;gap:var(--group-gap);margin-bottom:var(--page-gap)}
+#nieuwsbeheer .newsroom-toolbar p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+#nieuwsbeheer .newsroom-layout{display:grid;grid-template-columns:minmax(220px,.72fr) minmax(0,1.49fr);align-items:start;gap:var(--page-gap)}
+#nieuwsbeheer .newsroom-library{position:sticky;top:16px}
+#nieuwsbeheer .newsroom-library h2{font-size:clamp(24px,2.5vw,32px)}
+#nieuwsbeheer .newsroom-search,#nieuwsbeheer .newsroom-form-grid label,#nieuwsbeheer .newsroom-image-picker label,#nieuwsbeheer .newsroom-relation-search,#nieuwsbeheer .newsroom-publication>label:not(.newsroom-check){display:grid;gap:7px;font-size:14px;font-weight:750}
+#nieuwsbeheer :is(input:not([type=checkbox]),textarea,select){width:100%;min-width:0;min-height:44px;padding:11px 12px;color:var(--ink);background:#fbfcf8;border:1px solid var(--panel-border);font:500 16px/1.5 var(--body)}
+#nieuwsbeheer textarea{resize:vertical}
+#nieuwsbeheer label small{font-size:12px;font-weight:500;line-height:1.4;color:var(--muted)}
+#nieuwsbeheer .newsroom-filters{margin-top:var(--group-gap);gap:3px}
+#nieuwsbeheer .newsroom-filters>button{font-size:13px;padding-inline:7px}
+#nieuwsbeheer .newsroom-items{padding:0;margin:var(--group-gap) 0 0;list-style:none;border-top:1px solid var(--edge);max-height:650px;overflow:auto;scrollbar-width:thin}
+#nieuwsbeheer .newsroom-items li{border-bottom:1px solid var(--edge)}
+#nieuwsbeheer .newsroom-item{display:block;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:13px 9px;color:var(--ink)}
+#nieuwsbeheer .newsroom-item:hover{background:#f4f7ef}
+#nieuwsbeheer .newsroom-item[aria-current=true]{background:var(--soft-surface)}
+#nieuwsbeheer .newsroom-item strong{font-size:15px;line-height:1.4;display:block;font-weight:780}
+#nieuwsbeheer .newsroom-item-meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 9px;font-size:12px;margin-top:7px;color:var(--muted)}
+#nieuwsbeheer .newsroom-item-meta em{font-style:normal;color:#286448;font-weight:800}
+#nieuwsbeheer .newsroom-empty{font-size:13px;color:var(--muted);line-height:1.5;padding:13px 0}
+#nieuwsbeheer .newsroom-editor>.hv-section-head{align-items:start;margin-bottom:var(--panel-padding)}
+#nieuwsbeheer .newsroom-editor>.hv-section-head h2{font-size:clamp(24px,3vw,36px)}
+#nieuwsbeheer .newsroom-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 14px}
+#nieuwsbeheer .newsroom-full{grid-column:1/-1}
+#nieuwsbeheer .newsroom-section{margin-top:24px;padding-top:22px;border-top:1px solid var(--edge)}
+#nieuwsbeheer h3{margin:0;font-size:17px;letter-spacing:-.025em;line-height:1.2}
+#nieuwsbeheer .newsroom-section p{margin:7px 0 16px;color:var(--muted);font-size:14px;line-height:1.5}
+#nieuwsbeheer .newsroom-image-picker{display:grid;grid-template-columns:140px minmax(0,1fr);gap:var(--group-gap);align-items:center}
+#nieuwsbeheer .newsroom-image-picker img{width:140px;height:98px;object-fit:cover;border-radius:10px}
+#nieuwsbeheer .newsroom-relations{display:grid;gap:9px}
+#nieuwsbeheer .newsroom-relations details{border:1px solid var(--panel-border);border-radius:10px;padding:0 12px;background:#fcfdf9}
+#nieuwsbeheer .newsroom-relations summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px;cursor:pointer;font-size:14px;font-weight:780;list-style:none}
+#nieuwsbeheer .newsroom-relations summary::-webkit-details-marker{display:none}
+#nieuwsbeheer .newsroom-relations summary>span{font-size:12px;font-weight:600;color:var(--muted)}
+#nieuwsbeheer .newsroom-relations summary:after{content:'+';font-size:18px}
+#nieuwsbeheer .newsroom-relations details[open] summary:after{content:'−'}
+#nieuwsbeheer .newsroom-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px;padding:8px 0 12px;max-height:228px;overflow:auto;scrollbar-width:thin}
+#nieuwsbeheer .newsroom-choice{display:flex;align-items:start;gap:7px;padding:7px 0;font-size:14px;font-weight:650;cursor:pointer;line-height:1.35;min-width:0}
+#nieuwsbeheer .newsroom-choice span{min-width:0;overflow-wrap:anywhere}
+#nieuwsbeheer .newsroom-choice small{display:block;font-size:12px;margin-top:2px;color:var(--muted);font-weight:500}
+#nieuwsbeheer input[type=checkbox]{width:16px;height:16px;flex:none;margin:1px 0 0;accent-color:var(--green)}
+#nieuwsbeheer .newsroom-publication{display:grid;gap:12px}
+#nieuwsbeheer .newsroom-publication p{margin-bottom:0}
+#nieuwsbeheer .newsroom-check{display:flex;align-items:start;gap:8px;font-size:14px;font-weight:750;cursor:pointer}
+#nieuwsbeheer .newsroom-check small{display:block;margin-top:4px}
+#nieuwsbeheer .newsroom-save{margin-top:24px}
+#nieuwsbeheer .newsroom-save>div{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+#nieuwsbeheer .newsroom-save>p{background:var(--soft-surface);border-radius:8px;padding:11px 12px;font-size:14px;line-height:1.5;margin:0 0 12px;color:#205537}
+#nieuwsbeheer .newsroom-save>p[data-tone=error]{background:#fbefe5;color:#8a3d20}
+@media(max-width:1000px){#nieuwsbeheer .newsroom-layout{grid-template-columns:minmax(190px,.65fr) minmax(0,1.49fr)}#nieuwsbeheer .newsroom-choices{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:730px){#nieuwsbeheer .newsroom-layout{grid-template-columns:minmax(0,1fr)}#nieuwsbeheer .newsroom-library{position:static}#nieuwsbeheer .newsroom-items{max-height:270px}#nieuwsbeheer .newsroom-toolbar{align-items:start;flex-direction:column}#nieuwsbeheer .newsroom-image-picker{grid-template-columns:100px minmax(0,1fr)}#nieuwsbeheer .newsroom-image-picker img{width:100px;height:86px}#nieuwsbeheer .newsroom-form-grid{grid-template-columns:minmax(0,1fr)}#nieuwsbeheer :is(input:not([type=checkbox]),textarea,select){font-size:16px}}

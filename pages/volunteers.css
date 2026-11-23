@@ -1,0 +1,29 @@
+#vrijwilligers .vol-progress{display:grid;gap:6px;background:var(--soft-surface);border:1px solid var(--panel-border);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+#vrijwilligers .vol-progress label{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:12px}
+#vrijwilligers .vol-progress strong{color:var(--ink)}
+#vrijwilligers progress{width:100%;height:7px;border:0;border-radius:999px;background:var(--sage);accent-color:#226743}
+#vrijwilligers progress::-webkit-progress-bar{background:var(--sage);border-radius:999px}
+#vrijwilligers progress::-webkit-progress-value{background:#226743;border-radius:999px}
+#vrijwilligers progress::-moz-progress-bar{background:#226743;border-radius:999px}
+#vrijwilligers .vol-list{list-style:none;margin:0;padding:0}
+#vrijwilligers .vol-task{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:start;padding:11px 0;border-bottom:1px solid var(--edge);cursor:pointer}
+#vrijwilligers .vol-task:hover{background:var(--soft-surface)}
+#vrijwilligers .vol-task input{appearance:auto;accent-color:#226743;margin:3px 0 0;width:16px;height:16px}
+#vrijwilligers .vol-task strong{display:block;font-size:14px;line-height:1.22}
+#vrijwilligers .vol-meta,#vrijwilligers .vol-club{display:block;color:var(--muted);line-height:1.35;margin-top:2px;font-size:12px}
+#vrijwilligers .vol-club{font-size:12px;font-weight:770}
+#vrijwilligers .vol-time{font:500 12px/1.3 var(--mono);white-space:nowrap;color:var(--muted)}
+#vrijwilligers .vol-feedback{margin:8px 0 0;font-size:12px;color:var(--muted)}
+#vrijwilligers .vol-feedback:empty{margin:0}
+#vrijwilligers .vol-update{background:var(--soft-surface)}
+#vrijwilligers .vol-update>p{color:var(--muted);font-size:14px;line-height:1.45;margin:0 0 12px}
+#vrijwilligers .vol-context h2{font-size:clamp(21px,2.45vw,29px)}
+#vrijwilligers .vol-arrivals{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 12px}
+#vrijwilligers .vol-arrivals div{background:var(--soft-surface);padding:9px 10px;border-radius:8px}
+#vrijwilligers .vol-arrivals dt{font-size:12px;color:var(--muted)}
+#vrijwilligers .vol-arrivals dd{font-size:25px;font-weight:830;line-height:1.05;letter-spacing:-.045em;margin:3px 0 0}
+#vrijwilligers .vol-context a:not(.hv-button){font-size:12px;font-weight:760}
+@media(max-width:420px){
+  #vrijwilligers .vol-task{gap:5px 7px;grid-template-columns:auto minmax(0,1fr)}
+  #vrijwilligers .vol-time{grid-column:2}
+}

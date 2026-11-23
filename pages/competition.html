@@ -1,0 +1,53 @@
+<div class="comp-route-anchors" data-comp-anchors aria-hidden="true"></div>
+<section class="comp-context hv-panel" aria-labelledby="comp-context-title">
+  <div><p class="hv-eyebrow">Toernooileiding · Seizoen 2026/27</p><h2 id="comp-context-title">De beker, volgens jouw regels.</h2><p>Leg het reglement vast en bepaal hoe iedere ronde verdergaat.</p></div>
+  <div class="comp-context-choice"><label for="comp-cup">Toernooi<select id="comp-cup" data-comp-cup></select></label><span class="comp-version" data-comp-version>Versie 1</span><button type="button" class="hv-button hv-button-outline" data-setup-open="cup">Nieuw bekertoernooi</button></div>
+</section>
+
+<nav class="hv-tabbar comp-tabs" aria-label="Toernooibeheer">
+  <button type="button" data-comp-tab="rules" aria-pressed="true" aria-controls="comp-rules">Reglement</button>
+  <button type="button" data-comp-tab="progression" aria-pressed="false" aria-controls="comp-progression">Voortgang per ronde</button>
+  <button type="button" data-comp-tab="bracket" aria-pressed="false" aria-controls="comp-bracket">Bracketindeling</button>
+</nav>
+<p class="comp-feedback" data-comp-feedback role="status" aria-live="polite"></p>
+
+<section class="comp-panel hv-panel" id="comp-rules" data-comp-panel="rules" aria-labelledby="comp-rules-title">
+  <header class="hv-section-head comp-panel-heading"><div><p class="hv-eyebrow">Van aftrap tot beslissing</p><h2 id="comp-rules-title">Een eigen reglement per beker.</h2><p>De instellingen en teksten horen bij het geselecteerde toernooi.</p></div><span class="comp-section-badge">Versiebeheer</span></header>
+  <form data-comp-rules-form>
+    <div class="comp-rule-grid">
+      <fieldset class="comp-rule-card"><legend>Speeltijd</legend><label>Minuten per helft<input name="halfMinutes" type="number" min="10" max="60" step="1" required></label><label>Rust in minuten<input name="halfTimeMinutes" type="number" min="0" max="30" step="1" required></label><p>Twee helften vormen de reguliere speeltijd.</p></fieldset>
+      <fieldset class="comp-rule-card"><legend>Verlenging</legend><label class="comp-check"><input name="extraTime" type="checkbox"> Verlenging bij een gelijke stand</label><label data-comp-extra-wrap>Minuten per verlengingshelft<input name="extraHalfMinutes" type="number" min="1" max="30" step="1" required></label><p>Leg vast of na de reguliere speeltijd wordt verlengd.</p></fieldset>
+      <fieldset class="comp-rule-card"><legend>Beslissing</legend><label class="comp-check"><input name="penalties" type="checkbox"> Strafschoppen toestaan</label><strong data-comp-rule-summary class="comp-decision-summary"></strong><p>Bij gelijkspel volgt de vastgelegde beslisroute.</p></fieldset>
+    </div>
+    <div class="comp-advanced-heading"><div><p class="hv-eyebrow">Eén reglement voor alle werkruimtes</p><h3>Deelname, selectie en arbitrage</h3></div><p>Deze instellingen gelden voor spelerscontrole, opgaven en de wedstrijd.</p></div>
+    <div class="comp-rule-grid comp-extended-grid">
+      <fieldset class="comp-rule-card"><legend>Leeftijd en dispensatie</legend><div class="comp-input-pair"><label>Minimumleeftijd<input name="minAge" type="number" min="0" max="99" step="1" placeholder="Geen minimum"></label><label>Maximumleeftijd<input name="maxAge" type="number" min="0" max="99" step="1" placeholder="Geen maximum"></label></div><label>Peildatum<select name="ageReference"><option value="match">Op de wedstrijddag</option><option value="season">Op een vaste seizoenspeildatum</option></select></label><label data-comp-reference-date>Vaste seizoenspeildatum<input name="referenceDate" type="date" required></label><label>Maximaal aantal dispensaties<input name="maxDispensations" type="number" min="0" max="30" step="1" required></label><p>Laat een leeftijdsgrens leeg wanneer deze niet van toepassing is.</p></fieldset>
+      <fieldset class="comp-rule-card"><legend>Wedstrijdselectie</legend><label>Aantal basisspelers<input name="starterCount" type="number" min="1" max="11" step="1" required></label><label>Minimaal aanwezige veldspelers<input name="minimumPlayers" type="number" min="3" max="11" step="1" required></label><label>Maximale wedstrijdselectie<input name="maxSquadSize" type="number" min="1" max="40" step="1" required></label><label class="comp-check"><input name="requiredGoalkeeper" type="checkbox"> Een keeper aanwijzen is verplicht</label><p>De teamleiding selecteert uitsluitend goedgekeurde spelers.</p></fieldset>
+      <fieldset class="comp-rule-card"><legend>Wissels en kaarten</legend><label>Wisselbeleid<select name="substitutionMode"><option value="continuous">Doorlopend wisselen</option><option value="limited">Beperkt aantal wissels</option></select></label><label data-comp-max-subs>Aantal toegestane wissels<input name="maxSubstitutions" type="number" min="0" max="20" step="1" required></label><label>Gele kaarten voor schorsingscontrole<input name="yellowThreshold" type="number" min="1" max="20" step="1" required></label><p>De toernooileiding beoordeelt sancties in het tuchtdossier.</p></fieldset>
+    </div>
+    <div class="comp-rule-grid comp-governance-grid">
+      <fieldset class="comp-rule-card"><legend>Arbitrage en geldigheid</legend><label>Type scheidsrechter<select name="refereeType"><option value="neutral">Onafhankelijke scheidsrechter</option><option value="club">Verenigingsscheidsrechter toegestaan</option></select></label><div class="comp-input-pair"><label>Benodigde assistenten<input name="assistantsRequired" type="number" min="0" max="2" step="1" required></label><label>Ingangsdatum<input name="effectiveFrom" type="date" required></label></div><p>Een begonnen wedstrijd behoudt de vastgezette reglementsversie.</p></fieldset>
+      <fieldset class="comp-rule-card" data-comp-rounds-wrap><legend>Verlenging per ronde</legend><p data-comp-rounds-note>Vink de rondes aan waarin na een gelijke stand wordt verlengd.</p><div class="comp-round-checks"><label class="comp-check"><input name="extraTimeRounds" type="checkbox" value="first"> Eerste ronde</label><label class="comp-check"><input name="extraTimeRounds" type="checkbox" value="last16"> Achtste finales</label><label class="comp-check"><input name="extraTimeRounds" type="checkbox" value="quarter"> Kwartfinales</label><label class="comp-check"><input name="extraTimeRounds" type="checkbox" value="semi"> Halve finales</label><label class="comp-check"><input name="extraTimeRounds" type="checkbox" value="final"> Finale</label></div></fieldset>
+    </div>
+    <p class="comp-unsaved" data-comp-unsaved role="status" hidden>Je hebt nog niet opgeslagen wijzigingen in dit reglement.</p>
+    <div class="comp-text-grid"><label>Toernooireglement<textarea name="tournamentText" rows="8" maxlength="12000" required placeholder="Deelname, speelgerechtigdheid, inschrijving en algemene afspraken"></textarea><small>Algemene afspraken voor deze beker.</small></label><label>Wedstrijdreglement<textarea name="matchText" rows="8" maxlength="12000" required placeholder="Wedstrijdverloop, wissels, kaarten, stakingen en de beslissing bij gelijkspel"></textarea><small>De tekst die teams en scheidsrechters bij het duel nodig hebben.</small></label></div>
+    <footer class="comp-form-footer"><p>Opslaan maakt een nieuwe reglementsversie.</p><button type="submit" class="hv-button hv-button-dark" data-comp-save-rules>Reglement opslaan</button></footer>
+  </form>
+</section>
+
+<section class="comp-panel hv-panel" id="comp-progression" data-comp-panel="progression" aria-labelledby="comp-progression-title" hidden>
+  <header class="hv-section-head comp-panel-heading"><div><p class="hv-eyebrow">Regie over de volgende ronde</p><h2 id="comp-progression-title">Doorstromen of opnieuw loten.</h2><p>Kies per ronde of winnaars automatisch doorgaan of eerst op een besluit wachten.</p></div></header>
+  <div class="comp-progression-guide"><article><span aria-hidden="true">A</span><div><h3>Automatisch</h3><p>Een bevestigde winnaar verschijnt direct op de gekoppelde plek in de volgende ronde.</p></div></article><article><span aria-hidden="true">H</span><div><h3>Handmatig</h3><p>Winnaars wachten op vrijgave. De toernooileiding kan eerst een nieuwe indeling publiceren.</p></div></article></div>
+  <div class="comp-round-list" data-comp-progression-list></div>
+  <div class="comp-progression-note"><strong>Een extra loting tussen rondes?</strong><p>Zet de bronronde op handmatig. Verdeel daarna de gekwalificeerde teams onder Bracketindeling en publiceer de gekozen volgorde.</p><button type="button" class="hv-button hv-button-outline" data-comp-open-bracket>Open bracketindeling</button></div>
+</section>
+
+<section class="comp-panel hv-panel" id="comp-bracket" data-comp-panel="bracket" aria-labelledby="comp-bracket-title" hidden>
+  <header class="hv-section-head comp-panel-heading"><div><p class="hv-eyebrow">Iedere plek bewust gekozen</p><h2 id="comp-bracket-title">Maak de indeling passend.</h2><p>Plaats teams op de juiste plek, wissel de volgorde en voeg vrijlotingen toe.</p></div><label class="comp-round-choice">Ronde<select data-comp-round><option value="first">Eerste ronde</option><option value="last16">Achtste finales</option><option value="quarter" selected>Kwartfinales</option><option value="semi">Halve finales</option><option value="final">Finale</option></select></label></header>
+  <div class="comp-bracket-status"><span data-comp-bracket-state>Conceptindeling</span><p>Gespeelde en begonnen wedstrijden behouden hun deelnemers.</p></div>
+  <div class="comp-seeding-grid" data-comp-seeding></div>
+  <section class="comp-preview" aria-labelledby="comp-preview-title"><header><h3 id="comp-preview-title">Controle van de indeling</h3><button type="button" class="comp-text-button" data-comp-preview>Controleer concept</button></header><div data-comp-preview-output><p>Controleer het concept voordat je de indeling publiceert.</p></div></section>
+  <footer class="comp-form-footer"><p>Een concept wordt pas zichtbaar in het bekerschema na publicatie.</p><div><button type="button" class="hv-button hv-button-outline" data-comp-save-draft>Concept bewaren</button><button type="button" class="hv-button hv-button-dark" data-comp-publish>Indeling publiceren</button></div></footer>
+</section>
+
+<section class="comp-history hv-panel" aria-labelledby="comp-history-title"><header class="hv-section-head"><div><p class="hv-eyebrow">Besluiten terugvinden</p><h2 id="comp-history-title">Laatste wijzigingen</h2></div></header><ol data-comp-history></ol></section>

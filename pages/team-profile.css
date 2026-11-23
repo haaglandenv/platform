@@ -1,0 +1,3 @@
+#elftal .public-profile-intro .hv-section-head h2{overflow-wrap:anywhere}
+#elftal .public-profile-toolbar label{width:min(100%,440px)}
+@media(max-width:730px){#elftal .public-profile-toolbar label{width:100%}}

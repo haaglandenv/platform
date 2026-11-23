@@ -1,0 +1,14 @@
+<dialog class="setup-dialog" data-setup-dialog aria-labelledby="setup-dialog-title" aria-describedby="setup-dialog-description">
+  <div class="setup-window">
+    <header class="setup-header">
+      <div class="setup-heading"><span class="setup-mark" data-setup-mark aria-hidden="true"></span><div><p class="hv-eyebrow">Toernooileiding · Toevoegen</p><h2 id="setup-dialog-title" data-setup-title></h2><p id="setup-dialog-description" data-setup-description></p></div></div>
+      <button type="button" class="setup-close" data-setup-close aria-label="Wizard sluiten"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </header>
+    <div class="setup-layout">
+      <aside class="setup-rail"><p class="setup-edition" data-setup-edition></p><nav aria-label="Stappen van de wizard"><ol class="setup-steps" data-setup-steps></ol></nav><div class="setup-reassurance"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="m12 3 8 3v6c0 5-8 9-8 9S4 17 4 12V6l8-3Z"/><path d="m8 12 3 3 5-6"/></svg><p>Alles op één plek.<span>Je controleert de gegevens voordat je ze opslaat.</span></p></div></aside>
+      <form id="setup-wizard-form" class="setup-form" data-setup-form novalidate><div class="setup-stage" data-setup-stage></div></form>
+    </div>
+    <section class="setup-discard" data-setup-discard hidden aria-labelledby="setup-discard-title"><h3 id="setup-discard-title">Wizard sluiten?</h3><p>Deze invoer is nog niet opgeslagen. Je kunt verdergaan of de wizard sluiten.</p><div class="setup-actions"><button type="button" class="hv-button hv-button-outline" data-setup-keep>Verdergaan</button><button type="button" class="hv-button hv-button-dark" data-setup-discard-confirm>Sluiten zonder opslaan</button></div></section>
+    <footer class="setup-footer"><div class="setup-footer-copy"><p class="setup-feedback" data-setup-feedback role="alert" hidden></p><p data-setup-save-note>Gegevens worden pas bij de laatste stap opgeslagen.</p></div><div class="setup-actions"><button type="button" class="hv-button hv-button-outline" data-setup-back>Vorige</button><button type="submit" form="setup-wizard-form" class="hv-button hv-button-dark" data-setup-next>Volgende</button></div></footer>
+  </div>
+</dialog>

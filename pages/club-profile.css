@@ -1,0 +1,35 @@
+.public-profile-anchor{display:block;height:0;scroll-margin-top:24px}
+.public-profile-toolbar{display:flex;align-items:end;justify-content:space-between;gap:14px;margin-bottom:var(--page-gap)}
+.public-profile-toolbar label{display:grid;gap:6px;font-size:12px;font-weight:750;min-width:0;width:min(100%,390px)}
+.public-profile-toolbar select{min-width:0;max-width:100%;width:100%;padding:10px 12px;border:1px solid var(--panel-border);background:#f8fbf5;color:var(--ink);font:650 14px var(--body);min-height:44px}
+.public-profile-grid{align-items:stretch}
+.public-profile-intro{display:flex;flex-direction:column;justify-content:center}
+.public-profile-intro>p{color:var(--muted);font-size:15px;line-height:1.65;max-width:55ch;margin:3px 0 20px}
+.public-profile-id{font:500 12px var(--mono);color:var(--muted)}
+.public-profile-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.public-profile-photo{position:relative;margin:0;border-radius:var(--panel-radius);overflow:hidden;min-height:250px;background:var(--soft-surface)}
+.public-profile-photo img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.public-profile-photo:after{content:"";position:absolute;inset:50% 0 0;background:linear-gradient(transparent,#082d22b5)}
+.public-profile-photo figcaption{position:absolute;bottom:20px;left:22px;right:22px;z-index:1;color:white;font-size:13px;font-weight:750}
+.public-profile-teams,.public-context-news{margin-top:var(--page-gap)}
+.public-profile-teams .hv-section-head>span{font:500 12px var(--mono);color:var(--muted)}
+.public-team-links{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.public-team-links a{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid var(--panel-border);border-radius:11px;background:#f8fbf5;min-height:75px;transition:background .2s ease,border-color .2s ease}
+.public-team-links a:hover{background:var(--soft-surface);border-color:#8db096}
+.public-team-links strong,.public-team-links small{display:block}
+.public-team-links strong{font-size:14px;font-weight:780}
+.public-team-links small{margin-top:5px;color:var(--muted);font:500 12px var(--mono)}
+.profile-news-feed{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--group-gap)}
+.profile-news-feed>p:only-child{grid-column:1/-1;margin:0;padding:var(--panel-padding);border:1px solid var(--panel-border);border-radius:var(--panel-radius);background:var(--panel-bg);color:var(--muted);font-size:14px}
+.workspace-context-news{margin-top:var(--page-gap)}
+.workspace-context-news .hv-section-head h2{font-size:clamp(23px,2.5vw,31px)}
+.workspace-context-news .profile-news-feed{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:730px){
+ .public-profile-toolbar{align-items:stretch;flex-direction:column}
+ .public-profile-toolbar label{width:100%}
+ .public-profile-toolbar select{font-size:16px}
+ .public-profile-photo{min-height:210px}
+ .public-team-links{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .profile-news-feed,.workspace-context-news .profile-news-feed{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:420px){.public-team-links{grid-template-columns:minmax(0,1fr)}}

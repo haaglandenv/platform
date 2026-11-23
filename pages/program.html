@@ -1,0 +1,25 @@
+<p data-hv-planning-notice class="hv-public-notice" hidden></p>
+<section class="cal-shell hv-panel" aria-labelledby="cal-period-title">
+  <header class="cal-toolbar">
+    <div class="cal-period"><p class="hv-eyebrow">De hele bekerkalender</p><h2 id="cal-period-title" data-cal-title>Juni 2027</h2></div>
+    <div class="cal-controls">
+      <div class="cal-date-controls" role="group" aria-label="Kalenderperiode">
+        <button type="button" class="cal-step" data-cal-step="-1" aria-label="Vorige periode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg></button>
+        <button type="button" class="cal-today" data-cal-today>Vandaag</button>
+        <button type="button" class="cal-step" data-cal-step="1" aria-label="Volgende periode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
+      </div>
+      <div class="hv-tabbar cal-views" role="group" aria-label="Kalenderweergave">
+        <button type="button" data-cal-view="day" aria-pressed="false">Dag</button><button type="button" data-cal-view="week" aria-pressed="false">Week</button><button type="button" data-cal-view="month" aria-pressed="true">Maand</button>
+      </div>
+    </div>
+  </header>
+  <div class="cal-filter-row">
+    <label>Toernooi<select data-cal-cup aria-label="Filter op toernooi"><option value="">Alle toernooien</option></select></label>
+    <label>Vereniging<select data-cal-club aria-label="Filter op vereniging"><option value="">Alle verenigingen</option></select></label>
+    <label class="cal-search">Zoek een wedstrijd<input type="search" data-cal-search placeholder="Team of sportpark" autocomplete="off"></label>
+  </div>
+  <div class="cal-summary" aria-live="polite"><p data-cal-summary></p><span><i class="cal-dot cal-dot-live" aria-hidden="true"></i> Live <i class="cal-dot cal-dot-planned" aria-hidden="true"></i> Gepland <i class="cal-dot cal-dot-done" aria-hidden="true"></i> Gespeeld</span></div>
+  <div class="cal-canvas" data-cal-canvas aria-label="Wedstrijdkalender"></div>
+  <footer class="cal-footnote"><span>Demoseizoen 2026/27 · inclusief eerdere speelrondes</span><a href="#live">Open het live-overzicht</a></footer>
+</section>
+<section class="cal-detail hv-panel" data-cal-detail aria-labelledby="cal-detail-title" aria-live="polite"></section>

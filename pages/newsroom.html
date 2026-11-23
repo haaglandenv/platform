@@ -1,0 +1,50 @@
+<section class="hv-panel xp-settings"><label><input type="checkbox" data-newsroom-auto-report> Verslag als redactieconcept inschakelen</label><p class="xp-source">Maakt een controleerbaar concept uit officiële uitslagen en bevestigde gebeurtenissen. Publiceren blijft een redactioneel besluit.</p><label>Wedstrijd<select data-newsroom-report-match></select></label><button type="button" class="hv-button hv-button-outline" data-newsroom-generate-report>Maak verslagconcept</button></section>
+<div class="newsroom-toolbar">
+  <div><p class="hv-eyebrow">Redactie · demo</p><p>Beheer de verhalen op de homepage en bij toernooien, verenigingen en teams.</p></div>
+  <button type="button" class="hv-button hv-button-dark" data-newsroom-new>Nieuw artikel <span aria-hidden="true">+</span></button>
+</div>
+<div class="newsroom-layout">
+  <section class="hv-panel newsroom-library" aria-labelledby="newsroom-library-title">
+    <header class="hv-section-head"><div><h2 id="newsroom-library-title">Artikelen</h2><p data-newsroom-count></p></div></header>
+    <label class="newsroom-search">Zoek een artikel<input type="search" data-newsroom-search placeholder="Titel of categorie"></label>
+    <nav class="hv-tabbar newsroom-filters" aria-label="Artikelstatus">
+      <button type="button" data-newsroom-filter="all" aria-pressed="true">Alle</button>
+      <button type="button" data-newsroom-filter="published" aria-pressed="false">Gepubliceerd</button>
+      <button type="button" data-newsroom-filter="review" aria-pressed="false">Ter controle</button><button type="button" data-newsroom-filter="draft" aria-pressed="false">Concepten</button>
+    </nav>
+    <ul class="newsroom-items" data-newsroom-list></ul>
+  </section>
+  <section class="hv-panel newsroom-editor" id="newsroom-editor" aria-labelledby="newsroom-editor-title">
+    <header class="hv-section-head"><div><p class="hv-eyebrow" data-newsroom-id>Nieuw artikel</p><h2 id="newsroom-editor-title" tabindex="-1">Artikel schrijven</h2></div><button type="button" class="hv-button hv-button-outline" data-newsroom-preview>Voorbeeld bekijken</button></header>
+    <form data-newsroom-form>
+      <div class="newsroom-form-grid">
+        <label class="newsroom-full">Titel<input type="text" name="title" maxlength="150" required placeholder="Geef je verhaal een heldere titel"></label>
+        <label class="newsroom-full">Intro<textarea name="excerpt" rows="3" maxlength="340" required placeholder="De kern van het artikel in een paar zinnen"></textarea></label>
+        <label class="newsroom-full">Artikel<textarea name="body" rows="10" required placeholder="Schrijf de volledige tekst. Gebruik een lege regel tussen alinea’s."></textarea><small>Een lege regel begint een nieuwe alinea. Gebruik ## voor een tussenkop, &gt; voor een citaat en [[media:HV-MEDIA-001]] voor een goedgekeurde galerij.</small></label>
+        <label>Auteur<input name="author" maxlength="100" value="Redactie Haaglanden"></label><label>Categorie<input type="text" name="category" maxlength="50" list="newsroom-categories" required></label>
+        <datalist id="newsroom-categories"><option value="Toernooienieuws"><option value="Clubverhaal"><option value="Wedstrijdzaken"><option value="Finaledag"><option value="Jeugd"></datalist>
+        <label>Publicatiedatum<input type="date" name="publishedAt" required></label>
+      </div>
+      <section class="newsroom-section" aria-labelledby="newsroom-image-title">
+        <div class="newsroom-section-heading"><h3 id="newsroom-image-title">Beeld bij je verhaal</h3><p>Kies een beeld uit de toernooicollectie of een goedgekeurde inzending met gebruiksrecht voor artikelen.</p></div>
+        <div class="newsroom-image-picker"><img data-newsroom-image alt="Voorbeeld van het gekozen artikelbeeld" width="320" height="200"><label>Artikelbeeld<select name="image"><option value="assets/action.webp">Actie op het veld</option><option value="assets/finale.webp">De beker en de finale</option><option value="assets/crowd.webp">Supporters langs de lijn</option><option value="assets/club.webp">Clubgebouw en sportpark</option><option value="assets/official.webp">Scheidsrechter</option><option value="assets/kleedkamer.webp">Wedstrijdvoorbereiding</option><option value="assets/vrouwen.webp">Vrouwenvoetbal</option><option value="assets/velden.webp">Voetbalvelden</option><option value="assets/hero.webp">Toernooisfeer</option></select></label></div>
+      </section>
+      <section class="newsroom-section" aria-labelledby="newsroom-relations-title">
+        <div class="newsroom-section-heading"><h3 id="newsroom-relations-title">Waar verschijnt dit artikel?</h3><p>Koppel het verhaal aan één of meer toernooien, verenigingen of teams.</p></div>
+        <div class="newsroom-relations">
+          <details open><summary>Toernooien <span data-newsroom-relation-count="tournamentIds">0 gekozen</span></summary><div class="newsroom-choices" data-newsroom-choices="tournamentIds"></div></details>
+          <details><summary>Verenigingen <span data-newsroom-relation-count="clubIds">0 gekozen</span></summary><label class="newsroom-relation-search">Zoek een vereniging<input type="search" data-newsroom-relation-search="clubIds" placeholder="Naam of HV-ID"></label><div class="newsroom-choices" data-newsroom-choices="clubIds"></div></details>
+          <details><summary>Teams <span data-newsroom-relation-count="teamIds">0 gekozen</span></summary><label class="newsroom-relation-search">Zoek een team<input type="search" data-newsroom-relation-search="teamIds" placeholder="Naam of HV-ID"></label><div class="newsroom-choices" data-newsroom-choices="teamIds"></div></details>
+        </div>
+      </section>
+      <section class="newsroom-publication newsroom-section" aria-labelledby="newsroom-publication-title">
+        <div><h3 id="newsroom-publication-title">Publiceren</h3><p>De homepage toont maximaal drie uitgelichte artikelen. De tien nieuwste gepubliceerde titels verschijnen eronder.</p></div>
+        <label>Status<select name="status"><option value="draft">Concept</option><option value="review">Ter controle</option><option value="published">Gepubliceerd</option></select></label>
+        <label class="newsroom-check"><input type="checkbox" name="featured"><span>Uitlichten op de homepage<small>Haal bij drie uitgelichte artikelen eerst een ander artikel uit de selectie.</small></span></label>
+      </section>
+      <div class="newsroom-save"><p data-newsroom-feedback role="status" hidden></p><div><button type="button" class="hv-button hv-button-outline" data-newsroom-discard>Wijzigingen terugzetten</button><button type="submit" class="hv-button hv-button-dark" data-newsroom-save>Artikel opslaan <span aria-hidden="true">↗</span></button></div></div>
+    </form>
+  </section>
+</div>
+
+<section class="hv-panel" style="margin-top:var(--page-gap)" data-newsroom-preview-panel hidden><header class="hv-section-head"><div><p class="hv-eyebrow">Besloten redactievoorbeeld</p><h2 data-newsroom-preview-title></h2></div><button type="button" class="hv-button hv-button-outline" data-newsroom-close-preview>Sluiten</button></header><div class="xp-document-preview" data-newsroom-preview-body></div></section><section class="hv-panel" style="margin-top:var(--page-gap)"><h2>Controle en versiegeschiedenis.</h2><div class="xp-form"><label>Motivering<input data-newsroom-review-reason minlength="8" maxlength="600" placeholder="Reden van het redactionele besluit of herstel"></label><div class="fd-actions"><button type="button" class="hv-button hv-button-outline" data-newsroom-request-review>Ter controle aanbieden</button><button type="button" class="hv-button hv-button-dark" data-newsroom-approve>Goedkeuren en publiceren</button><button type="button" class="hv-button hv-button-outline" data-newsroom-return>Terug naar concept</button></div></div><div class="xp-revisions" data-newsroom-revisions></div><p class="xp-source" data-newsroom-sources></p></section>

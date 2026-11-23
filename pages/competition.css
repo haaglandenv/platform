@@ -1,0 +1,95 @@
+#toernooibeheer .comp-context{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:var(--page-gap)}
+#toernooibeheer .comp-context>div:first-child{min-width:0}
+#toernooibeheer .comp-context h2,#toernooibeheer .comp-panel h2{margin:0;font-size:clamp(26px,3vw,39px);letter-spacing:-.055em;line-height:1.1;font-weight:830}
+#toernooibeheer .comp-context p:not(.hv-eyebrow),#toernooibeheer .comp-panel-heading p:not(.hv-eyebrow){font-size:14px;line-height:1.5;color:var(--muted);margin:9px 0 0;max-width:66ch}
+#toernooibeheer .comp-context-choice{display:grid;gap:9px;justify-items:end;flex:0 1 260px;min-width:180px}
+#toernooibeheer .comp-context-choice label,#toernooibeheer .comp-round-choice{display:grid;gap:6px;width:100%;font-size:13px;font-weight:750}
+#toernooibeheer :is(input:not([type=checkbox]),select,textarea){width:100%;min-width:0;color:var(--ink);border:1px solid var(--panel-border);background:#f8fbf5;padding:10px 12px;font:inherit;font-size:14px;line-height:1.45;min-height:44px}
+#toernooibeheer textarea{resize:vertical;min-height:215px}
+#toernooibeheer .comp-version,#toernooibeheer .comp-section-badge{display:inline-flex;padding:7px 11px;border:1px solid #d5e4cf;background:#eef5e8;color:#386849;border-radius:30px;font-size:12px;font-weight:750;white-space:nowrap}
+#toernooibeheer .comp-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-bottom:0}
+#toernooibeheer .comp-tabs button{min-height:48px}
+#toernooibeheer .comp-feedback{margin:0;min-height:42px;padding:10px 0;color:#265f3d;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+#toernooibeheer .comp-feedback[data-error=true]{color:#a2462b}
+#toernooibeheer .comp-panel{min-height:700px}
+#toernooibeheer .comp-panel-heading{min-height:99px;align-items:start;gap:20px;margin-bottom:22px}
+#toernooibeheer .comp-panel-heading>div{min-width:0}
+#toernooibeheer .comp-rule-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--group-gap);margin-bottom:24px}
+#toernooibeheer .comp-rule-card{min-width:0;margin:0;padding:19px 17px 15px;background:#f2f7ec;border:1px solid #dbe6d5;border-radius:12px;min-height:235px}
+#toernooibeheer .comp-rule-card legend{padding:0 5px;font-size:15px;font-weight:800;letter-spacing:-.02em}
+#toernooibeheer .comp-rule-card label{display:grid;gap:5px;margin-bottom:11px;font-size:13px;font-weight:650}
+#toernooibeheer .comp-rule-card p{font-size:12px;line-height:1.5;color:var(--muted);margin:10px 0 0}
+#toernooibeheer label.comp-check{display:flex;align-items:flex-start;gap:8px;font-size:14px;line-height:1.45;min-height:49px}
+#toernooibeheer .comp-check input{width:17px;height:17px;flex:none;margin:2px 0 0;accent-color:#17543b}
+#toernooibeheer .comp-decision-summary{display:block;min-height:62px;padding:12px 13px;background:#e5efdd;border-radius:8px;font-size:14px;line-height:1.4;margin-top:9px}
+#toernooibeheer .comp-text-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--page-gap)}
+#toernooibeheer .comp-text-grid>label{display:grid;gap:8px;min-width:0;font-size:15px;font-weight:750}
+#toernooibeheer .comp-text-grid small{font-size:12px;color:var(--muted);font-weight:450;line-height:1.4}
+#toernooibeheer .comp-form-footer{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:24px;padding-top:18px;border-top:1px solid var(--panel-border)}
+#toernooibeheer .comp-form-footer>p{margin:0;max-width:53ch;color:var(--muted);font-size:12px;line-height:1.5}
+#toernooibeheer .comp-form-footer>div{display:flex;gap:8px;flex-wrap:wrap}
+#toernooibeheer .comp-progression-guide{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--group-gap);margin-bottom:24px}
+#toernooibeheer .comp-progression-guide article{display:flex;gap:13px;border:1px solid #d8e6d0;border-radius:12px;padding:18px;background:#f0f6e9;min-width:0}
+#toernooibeheer .comp-progression-guide article>span{display:grid;place-items:center;flex:none;width:35px;height:35px;border-radius:10px;background:#dcebd2;color:#275c38;font-weight:800}
+#toernooibeheer .comp-progression-guide h3{margin:0 0 5px;font-size:18px;letter-spacing:-.025em}
+#toernooibeheer .comp-progression-guide p{margin:0;font-size:14px;line-height:1.5;color:var(--muted)}
+#toernooibeheer .comp-round-list{display:grid;gap:12px}
+#toernooibeheer .comp-round-row{display:grid;grid-template-columns:minmax(0,1fr) 185px 150px;gap:15px;align-items:center;border:1px solid var(--panel-border);border-radius:12px;padding:17px 18px;min-height:98px}
+#toernooibeheer .comp-round-row>div{min-width:0}
+#toernooibeheer .comp-round-row h3{margin:0 0 4px;font-size:17px;letter-spacing:-.025em}
+#toernooibeheer .comp-round-row p{font-size:12px;color:var(--muted);margin:0;line-height:1.45}
+#toernooibeheer .comp-round-row label{display:grid;gap:5px;font-size:12px;font-weight:700}
+#toernooibeheer .comp-round-row>.hv-button{justify-content:center;width:100%;font-size:12px}
+#toernooibeheer .comp-progression-note{margin-top:23px;background:#f5f8ef;border-radius:12px;padding:18px 19px}
+#toernooibeheer .comp-progression-note>strong{font-size:16px}
+#toernooibeheer .comp-progression-note>p{font-size:14px;color:var(--muted);line-height:1.5;margin:7px 0 14px;max-width:75ch}
+#toernooibeheer .comp-round-choice{flex:0 0 175px}
+#toernooibeheer .comp-bracket-status{display:flex;justify-content:space-between;align-items:center;gap:16px;min-height:50px;margin:-5px 0 17px}
+#toernooibeheer .comp-bracket-status>span{padding:6px 9px;background:#eaf3e2;border-radius:6px;font-size:12px;font-weight:750;white-space:nowrap}
+#toernooibeheer .comp-bracket-status>p{font-size:12px;color:var(--muted);margin:0;line-height:1.5;text-align:right}
+#toernooibeheer .comp-seeding-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--group-gap);min-height:280px;align-content:start}
+#toernooibeheer .comp-seeding-match{padding:16px;border:1px solid var(--panel-border);border-radius:12px;background:#fbfcf8;min-width:0}
+#toernooibeheer .comp-seeding-match>header{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:25px;margin-bottom:8px}
+#toernooibeheer .comp-seeding-match h3{font-size:14px;margin:0;font-weight:800}
+#toernooibeheer .comp-seeding-match>header span{font-size:12px;padding:4px 6px;background:#ecf2e7;color:var(--muted);border-radius:5px;font-weight:700}
+#toernooibeheer .comp-seed-slot{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;margin-top:9px}
+#toernooibeheer .comp-seed-slot label{display:grid;gap:5px;min-width:0;font-size:12px;font-weight:750;color:var(--muted)}
+#toernooibeheer .comp-seed-actions{display:flex;gap:3px}
+#toernooibeheer .comp-seed-actions button{display:grid;place-items:center;min-width:33px;min-height:44px;border:1px solid var(--panel-border);border-radius:7px;background:#fff;color:#355f41;font-size:12px;padding:5px}
+#toernooibeheer .comp-seed-actions button:disabled{opacity:.35;cursor:default}
+#toernooibeheer .comp-seed-locked{font-size:12px;color:var(--muted);line-height:1.4;margin:11px 0 0}
+#toernooibeheer .comp-preview{margin-top:22px;padding:18px;border:1px solid #d6e4cf;border-radius:12px;background:#f2f7eb}
+#toernooibeheer .comp-preview>header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+#toernooibeheer .comp-preview h3{margin:0;font-size:16px;letter-spacing:-.02em}
+#toernooibeheer .comp-text-button{background:none;border:0;padding:5px 0;color:#256444;font-size:12px;font-weight:800}
+#toernooibeheer .comp-preview p{margin:0;font-size:13px;line-height:1.5;color:var(--muted)}
+#toernooibeheer .comp-preview ol{margin:0;padding-left:20px;display:grid;gap:7px;font-size:13px;line-height:1.45}
+#toernooibeheer .comp-preview [data-error=true]{color:#9a442c}
+#toernooibeheer .comp-history{margin-top:var(--page-gap)}
+#toernooibeheer .comp-history h2{font-size:25px;letter-spacing:-.045em;margin:0}
+#toernooibeheer .comp-history ol{list-style:none;margin:13px 0 0;padding:0;display:grid}
+#toernooibeheer .comp-history li{display:grid;grid-template-columns:135px minmax(0,1fr);gap:16px;align-items:start;padding:12px 0;border-top:1px solid var(--panel-border);font-size:13px;line-height:1.45}
+#toernooibeheer .comp-history time{font-size:12px;color:var(--muted)}
+@media(max-width:970px){#toernooibeheer .comp-rule-grid{gap:10px}#toernooibeheer .comp-rule-card{padding-inline:13px}#toernooibeheer .comp-round-row{grid-template-columns:minmax(0,1fr) 165px 135px;gap:10px}#toernooibeheer .comp-seed-slot{grid-template-columns:minmax(0,1fr)}#toernooibeheer .comp-seed-actions{justify-content:end}#toernooibeheer .comp-seed-actions button{min-height:30px;padding-inline:9px}}
+@media(max-width:730px){#toernooibeheer .comp-context{align-items:start;flex-direction:column;gap:18px}#toernooibeheer .comp-context-choice{width:100%;max-width:none;min-width:0;flex:auto;grid-template-columns:minmax(0,1fr) auto;align-items:end}#toernooibeheer .comp-context-choice .comp-version{margin-bottom:6px}#toernooibeheer .comp-tabs button{font-size:12px;padding-inline:7px!important;white-space:normal;line-height:1.25;min-height:51px}#toernooibeheer .comp-panel{min-height:700px}#toernooibeheer .comp-panel-heading{flex-direction:column;min-height:121px;gap:10px}#toernooibeheer .comp-panel-heading h2{font-size:29px}#toernooibeheer .comp-section-badge{font-size:12px}#toernooibeheer .comp-rule-grid{grid-template-columns:minmax(0,1fr);gap:15px}#toernooibeheer .comp-rule-card{min-height:185px;padding:16px}#toernooibeheer .comp-rule-card label.comp-check{min-height:0}#toernooibeheer .comp-decision-summary{min-height:0}#toernooibeheer .comp-text-grid{grid-template-columns:minmax(0,1fr);gap:18px}#toernooibeheer .comp-form-footer{align-items:start;flex-direction:column;gap:14px}#toernooibeheer .comp-form-footer>div{width:100%}#toernooibeheer .comp-form-footer .hv-button{white-space:normal;min-height:43px}#toernooibeheer .comp-progression-guide{grid-template-columns:minmax(0,1fr)}#toernooibeheer .comp-round-row{grid-template-columns:minmax(0,1fr) 135px;padding:15px;gap:13px}#toernooibeheer .comp-round-row>.hv-button{grid-column:1/-1;justify-self:start;width:auto;min-height:42px}#toernooibeheer .comp-round-choice{flex:auto;max-width:220px}#toernooibeheer .comp-bracket-status{align-items:start;flex-direction:column;gap:7px}#toernooibeheer .comp-bracket-status>p{text-align:left}#toernooibeheer .comp-seeding-grid{grid-template-columns:minmax(0,1fr)}#toernooibeheer .comp-seed-slot{grid-template-columns:minmax(0,1fr) auto}#toernooibeheer .comp-seed-actions button{min-height:44px;padding:5px 7px;font-size:12px}#toernooibeheer .comp-seeding-match{padding:13px}#toernooibeheer .comp-history li{grid-template-columns:minmax(0,1fr);gap:4px}#toernooibeheer .comp-preview>header{align-items:start;flex-direction:column;gap:7px}}
+@media(max-width:390px){#toernooibeheer .comp-seed-slot{grid-template-columns:minmax(0,1fr)}#toernooibeheer .comp-round-row{grid-template-columns:minmax(0,1fr)}#toernooibeheer .comp-round-row label{max-width:none}}
+
+#toernooibeheer .comp-route-anchors{position:relative;height:0}
+#toernooibeheer .comp-route-anchors>span{position:absolute;top:0}
+#toernooibeheer .comp-advanced-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;margin:28px 0 20px;padding-top:25px;border-top:1px solid var(--panel-border)}
+#toernooibeheer .comp-advanced-heading h3{font-size:25px;line-height:1.15;letter-spacing:-.04em;margin:6px 0 0}
+#toernooibeheer .comp-advanced-heading>p{font-size:14px;line-height:1.55;color:var(--muted);max-width:44ch;margin:0}
+#toernooibeheer .comp-extended-grid .comp-rule-card{min-height:330px}
+#toernooibeheer .comp-rule-card label{font-size:14px}
+#toernooibeheer .comp-input-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#toernooibeheer .comp-governance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#toernooibeheer .comp-governance-grid .comp-rule-card{min-height:275px}
+#toernooibeheer .comp-round-checks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 16px;margin-top:18px}
+#toernooibeheer .comp-round-checks label.comp-check{min-height:39px;margin:0;align-items:center}
+#toernooibeheer .comp-round-checks label.comp-check input{margin:0}
+#toernooibeheer [data-comp-rounds-wrap][data-disabled=true]{background:#f7f9f3}
+#toernooibeheer [data-comp-rounds-wrap][data-disabled=true] .comp-round-checks{opacity:.5}
+#toernooibeheer .comp-unsaved{border:1px solid #d7d697;background:#f6f7df;border-radius:10px;padding:12px 15px;font-size:14px;line-height:1.5;margin:0 0 22px;color:#5e632c}
+@media(max-width:970px){#toernooibeheer .comp-extended-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#toernooibeheer .comp-extended-grid .comp-rule-card:last-child{grid-column:1/-1;min-height:280px}#toernooibeheer .comp-input-pair{grid-template-columns:minmax(0,1fr);gap:0}}
+@media(max-width:730px){#toernooibeheer .comp-advanced-heading{align-items:start;flex-direction:column;gap:12px}#toernooibeheer .comp-extended-grid,#toernooibeheer .comp-governance-grid{grid-template-columns:minmax(0,1fr)}#toernooibeheer .comp-extended-grid .comp-rule-card,#toernooibeheer .comp-governance-grid .comp-rule-card{min-height:275px}#toernooibeheer .comp-input-pair{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#toernooibeheer .comp-advanced-heading h3{font-size:24px}}
+@media(max-width:390px){#toernooibeheer .comp-input-pair,#toernooibeheer .comp-round-checks{grid-template-columns:minmax(0,1fr)}}

@@ -1,0 +1,31 @@
+#official .mev-layout{margin-top:var(--page-gap)}
+#official .mev-layout fieldset{
+  display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:10px;
+  padding:0;margin:0;border:0;min-inline-size:0;
+}
+#official .mev-layout label{min-width:0}
+#official .mev-layout .mev-note{grid-column:1/-1}
+#official .mev-layout fieldset:disabled{opacity:.6}
+#official .official-shell .mev-gate{
+  padding:9px 11px;margin:0 0 12px;background:var(--soft-surface);border-radius:9px;
+}
+#official .mev-gate a{font-weight:800;color:#175339}
+#official .mev-gate a:hover{color:#17684a}
+#official .mev-history{padding:0;margin:0;list-style:none}
+#official .mev-history-item{
+  display:grid;grid-template-columns:minmax(32px,auto) minmax(0,1fr) auto;gap:4px 9px;
+  align-items:start;border-top:1px solid var(--edge);padding:9px 0;overflow-wrap:anywhere;
+}
+#official .mev-minute{font:700 12px var(--mono);color:#285f47;padding-top:3px}
+#official .mev-title{display:block;font-size:13px}
+#official .mev-person,#official .official-shell .mev-detail{color:var(--muted);display:block;font-size:12px}
+#official .mev-player-id{display:block;color:var(--muted);font:500 12px var(--mono);margin-top:2px}
+#official .mev-history-item[data-voided] .mev-title{color:var(--muted)}
+#official .mev-history-item .hv-button{font-size:12px;padding:5px 7px;min-height:32px}
+#official .mev-voided{font-size:12px;color:var(--muted);padding-top:4px}
+#official .official-shell .mev-notice{margin-top:9px}
+#official .mev-notice[data-tone="warning"]{color:#804713}
+#official .mev-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:420px){
+  #official .mev-layout fieldset{grid-template-columns:minmax(0,1fr)}
+}

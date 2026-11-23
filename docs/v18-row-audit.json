@@ -1,0 +1,198 @@
+{
+  "pages": [
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "werkvoorraad",
+      "rows": 8,
+      "targets": true,
+      "width": 345
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "werkvoorraad",
+      "rows": 8,
+      "targets": true,
+      "width": 375
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "werkvoorraad",
+      "rows": 8,
+      "targets": true,
+      "width": 785
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "werkvoorraad",
+      "rows": 8,
+      "targets": true,
+      "width": 1265
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "start",
+      "rows": 8,
+      "targets": true,
+      "width": 345
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "start",
+      "rows": 8,
+      "targets": true,
+      "width": 375
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "start",
+      "rows": 8,
+      "targets": true,
+      "width": 785
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "start",
+      "rows": 8,
+      "targets": true,
+      "width": 1265
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "gereed",
+      "rows": 9,
+      "targets": true,
+      "width": 345
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "gereed",
+      "rows": 9,
+      "targets": true,
+      "width": 375
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "gereed",
+      "rows": 9,
+      "targets": true,
+      "width": 785
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "gereed",
+      "rows": 9,
+      "targets": true,
+      "width": 1265
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "datakwaliteit",
+      "rows": 15,
+      "targets": true,
+      "width": 345
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "datakwaliteit",
+      "rows": 15,
+      "targets": true,
+      "width": 375
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "datakwaliteit",
+      "rows": 15,
+      "targets": true,
+      "width": 785
+    },
+    {
+      "errors": [],
+      "overflow": false,
+      "page": "datakwaliteit",
+      "rows": 15,
+      "targets": true,
+      "width": 1265
+    }
+  ],
+  "modal": [
+    {
+      "dialogWidth": 313,
+      "fields": [
+        {
+          "overflow": false,
+          "width": 271
+        },
+        {
+          "overflow": false,
+          "width": 271
+        }
+      ],
+      "outside": false,
+      "overflow": false,
+      "width": 345
+    },
+    {
+      "dialogWidth": 343,
+      "fields": [
+        {
+          "overflow": false,
+          "width": 301
+        },
+        {
+          "overflow": false,
+          "width": 301
+        }
+      ],
+      "outside": false,
+      "overflow": false,
+      "width": 375
+    },
+    {
+      "dialogWidth": 580,
+      "fields": [
+        {
+          "overflow": false,
+          "width": 257
+        },
+        {
+          "overflow": false,
+          "width": 257
+        }
+      ],
+      "outside": false,
+      "overflow": false,
+      "width": 785
+    },
+    {
+      "dialogWidth": 580,
+      "fields": [
+        {
+          "overflow": false,
+          "width": 257
+        },
+        {
+          "overflow": false,
+          "width": 257
+        }
+      ],
+      "outside": false,
+      "overflow": false,
+      "width": 1265
+    }
+  ]
+}

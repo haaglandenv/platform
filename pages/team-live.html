@@ -1,0 +1,33 @@
+<div class="tlive-context hv-panel">
+  <div><p class="hv-eyebrow">Teamleiding · live wedstrijdinvoer</p><h2>Leg het vast langs de lijn.</h2><p>Deel gebeurtenissen van je eigen team. De scheidsrechter controleert en bevestigt het uiteindelijke wedstrijdbeeld.</p></div>
+  <a class="hv-button hv-button-outline" href="#team">Spelersopgave beheren</a>
+</div>
+<section class="tlive-selector hv-panel" aria-label="Jouw wedstrijd">
+  <label>Jouw team<select data-tlive-team></select></label>
+  <label>Wedstrijd<select data-tlive-match></select></label>
+  <p data-tlive-access>Voorbeeldomgeving voor de teammanager van het geselecteerde team.</p>
+</section>
+<section class="tlive-score hv-panel" aria-label="Actuele stand" data-tlive-score></section>
+<section class="hv-panel" data-tlive-brief aria-label="Wedstrijdafspraken en tenues"></section>
+<div class="hv-content-grid tlive-grid">
+  <section class="hv-panel tlive-entry" aria-labelledby="tlive-entry-heading">
+    <header class="hv-section-head"><div><p class="hv-eyebrow">Jouw registratie</p><h2 id="tlive-entry-heading">Gebeurtenis toevoegen</h2></div><span class="tlive-badge">Voorlopig</span></header>
+    <p class="tlive-gate" data-tlive-gate></p>
+    <form data-tlive-form>
+      <fieldset data-tlive-fields>
+        <div class="tlive-form-row"><label>Gebeurtenis<select name="type" required><option value="goal">Doelpunt</option><option value="penalty-goal">Benutte strafschop</option><option value="own-goal">Eigen doelpunt</option><option value="yellow">Gele kaart</option><option value="second-yellow">Tweede gele kaart</option><option value="red">Rode kaart</option><option value="substitution">Wissel</option><option value="incident">Bijzonderheid</option></select></label><label>Minuut<input name="minute" type="number" min="0" max="150" step="1" required></label></div>
+        <label>Toegevoegde tijd<input name="addedMinutes" type="number" min="0" max="30" value="0"></label><label data-tlive-player-label>Speler<select name="playerId" required></select></label>
+        <label data-tlive-incoming-wrap hidden>Speler erin<select name="relatedPlayerId"></select></label>
+        <label>Toelichting<textarea name="note" rows="3" maxlength="600" placeholder="Wat gebeurde er op het veld?"></textarea></label>
+        <p class="tlive-form-help">Je kunt alleen spelers uit de goedgekeurde wedstrijdopgave van je eigen team kiezen.</p>
+        <button class="hv-button hv-button-dark" type="submit">Gebeurtenis doorgeven</button>
+      </fieldset>
+      <section class="rfo-duplicate" data-tlive-duplicate hidden><h3>Mogelijk al gemeld</h3><p data-tlive-duplicate-note></p><button type="button" class="hv-button hv-button-outline" data-tlive-link>Koppel mijn waarneming aan dit moment</button></section><p class="tlive-feedback" data-tlive-feedback role="status" aria-live="polite"></p>
+    </form>
+  </section>
+  <section class="hv-panel tlive-history" aria-labelledby="tlive-history-heading">
+    <header class="hv-section-head"><div><p class="hv-eyebrow">Beide teams</p><h2 id="tlive-history-heading">Wedstrijdverloop</h2></div><span data-tlive-pending></span></header>
+    <p class="tlive-history-note">Voorlopige invoer blijft herkenbaar tot de scheidsrechter deze heeft bevestigd. Afgewezen registraties blijven zichtbaar voor de teams.</p>
+    <div class="tlive-events" data-tlive-events aria-live="polite"></div>
+  </section>
+</div>
