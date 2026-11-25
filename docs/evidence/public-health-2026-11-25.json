@@ -1,0 +1,76 @@
+{
+  "checkedAt": "2026-11-25T12:49:44.707258+00:00",
+  "method": "HTTPS hostname/SNI/certificate verification; explicit resolved verified host IP to bypass stale system DNS cache",
+  "results": [
+    {
+      "environment": "staging",
+      "url": "https://hvcup-staging.dgwebservices.nl/api/health",
+      "exitCode": 0,
+      "curl": "200 204.168.128.28 0",
+      "stderr": "",
+      "body": {
+        "ok": true,
+        "service": "haagv",
+        "environment": "staging",
+        "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b"
+      }
+    },
+    {
+      "environment": "staging",
+      "url": "https://hvcup-staging.dgwebservices.nl/api/ready",
+      "exitCode": 0,
+      "curl": "200 204.168.128.28 0",
+      "stderr": "",
+      "body": {
+        "ok": true,
+        "service": "haagv",
+        "dataMode": "supabase",
+        "mail": "unconfigured"
+      }
+    },
+    {
+      "environment": "staging",
+      "url": "https://hvcup-staging.dgwebservices.nl/",
+      "exitCode": 0,
+      "curl": "200 204.168.128.28 0",
+      "stderr": "",
+      "htmlBytes": 2640,
+      "htmlTitlePresent": true
+    },
+    {
+      "environment": "production",
+      "url": "https://hvcup.dgwebservices.nl/api/health",
+      "exitCode": 0,
+      "curl": "200 204.168.128.28 0",
+      "stderr": "",
+      "body": {
+        "ok": true,
+        "service": "haagv",
+        "environment": "production",
+        "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b"
+      }
+    },
+    {
+      "environment": "production",
+      "url": "https://hvcup.dgwebservices.nl/api/ready",
+      "exitCode": 0,
+      "curl": "200 204.168.128.28 0",
+      "stderr": "",
+      "body": {
+        "ok": true,
+        "service": "haagv",
+        "dataMode": "supabase",
+        "mail": "unconfigured"
+      }
+    },
+    {
+      "environment": "production",
+      "url": "https://hvcup.dgwebservices.nl/",
+      "exitCode": 0,
+      "curl": "200 204.168.128.28 0",
+      "stderr": "",
+      "htmlBytes": 2640,
+      "htmlTitlePresent": true
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "status": "passed",
+  "before": "2026-11-25T12:43:37.030241+00:00",
+  "after": "2026-11-25T12:50:33.542944+00:00",
+  "checks": {
+    "proxyFiles": true,
+    "sshConfigFiles": true,
+    "sites": true,
+    "hostProfiles": true,
+    "runnerRegistrations": true,
+    "locks": true,
+    "buildLockPersistence": true,
+    "otherRelevantServices": true,
+    "identity": true,
+    "buildGroup": true,
+    "knownHealth": true,
+    "existingAccounts": true,
+    "atomicProxyTransactionConservation": true
+  },
+  "detail": {
+    "proxyFiles": {
+      "existingCount": 4,
+      "changedExistingPaths": []
+    },
+    "sshConfigFiles": {
+      "existingCount": 2,
+      "changedExistingPaths": []
+    },
+    "sites": {
+      "existingCount": 4,
+      "changedExistingPaths": []
+    },
+    "hostProfiles": {
+      "existingCount": 4,
+      "changedExistingPaths": []
+    },
+    "runnerRegistrations": {
+      "existingCount": 4,
+      "changedExistingPaths": []
+    },
+    "locks": {
+      "existingCount": 1,
+      "changedExistingPaths": []
+    },
+    "buildLockPersistence": {
+      "existingCount": 1,
+      "changedExistingPaths": []
+    },
+    "otherRelevantServices": {
+      "existingCount": 26,
+      "changed": []
+    }
+  },
+  "newOwnProxyPaths": [
+    "/etc/caddy/sites/haagv-platform-staging.caddy",
+    "/etc/caddy/sites/haagv-platform-production.caddy"
+  ],
+  "ownAppServices": {
+    "haagv-platform-production-runner.service": {
+      "Id": "haagv-platform-production-runner.service",
+      "MainPID": "0",
+      "ActiveState": "inactive",
+      "UnitFileState": "disabled"
+    },
+    "haagv-platform-production.service": {
+      "Id": "haagv-platform-production.service",
+      "MainPID": "1515999",
+      "ActiveState": "active",
+      "UnitFileState": "enabled"
+    },
+    "haagv-platform-staging-runner.service": {
+      "Id": "haagv-platform-staging-runner.service",
+      "MainPID": "0",
+      "ActiveState": "inactive",
+      "UnitFileState": "disabled"
+    },
+    "haagv-platform-staging.service": {
+      "Id": "haagv-platform-staging.service",
+      "MainPID": "1514737",
+      "ActiveState": "active",
+      "UnitFileState": "enabled"
+    }
+  },
+  "publicTlsEvidence": "public-tls-2026-11-25.json",
+  "publicShaHealthEvidence": "public-health-2026-11-25.json"
+}

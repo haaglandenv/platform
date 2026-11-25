@@ -1,6 +1,27 @@
-# Uitgevoerde deployvoorbereiding
+# Uitrolstatus
 
-## 25 november 2026: twee omgevingen, gereed voor afzonderlijke uitrol
+## 25 november 2026: staging en productie actief
+
+Beide omgevingen draaien op de vooraf geteste bronrelease `e21809120e0520effe8b9d9a7a1d02a9276bf74b`, met afzonderlijke kandidaatbuilds en activaties. [CI 45616434531](https://github.com/haaglandenv/platform/actions/runs/45616434531) slaagt op die exacte SHA. De latere verslagcommit verandert alleen documentatie en bewijs; hij is geen nieuwe apprelease.
+
+| Omgeving | Publieke site | Actieve release |
+| --- | --- | --- |
+| Staging | https://hvcup-staging.dgwebservices.nl | `e21809120e0520effe8b9d9a7a1d02a9276bf74b-1795610774363524309-1` |
+| Productie | https://hvcup.dgwebservices.nl | `e21809120e0520effe8b9d9a7a1d02a9276bf74b-1795610842169232587-1` |
+
+Health en readiness geven op beide origins HTTP 200, de exacte SHA, het juiste environment en Supabase-modus. Beide apps zijn actief en enabled voor hostherstart. Er zijn uitsluitend twee nieuwe eigen Caddybestanden toegevoegd en na gezamenlijke validatie is Caddy eenmaal herladen. TLS1.3, hostname/SAN en Let's Encrypt-certificaten zijn geverifieerd; HTTP verwijst met 308 naar HTTPS. Staging krijgt noindex; productie niet.
+
+In elk project bestaat precies één eerste Auth-account en één actief leidinglidmaatschap voor `info@dgwebservices.nl`. De bootstrap heeft het adres niet vooraf bevestigd, geen wachtwoord aangeleverd en geen mail verzonden. Eerste toegang vereist de zescijferige Supabase-code. De eigenaar bevestigt de twee Auth-templates, OTP6, Site URLs en SMTP. De Resend API-configuratie staat bewust nog op unconfigured; de leiding kan die nu onder Instellingen invullen en alle acht templates beheren.
+
+De live browsercontrole heeft op beide echte HTTPS-origins de homepage, login, exacte health/readiness, anonieme afscherming en 390/1280px gecontroleerd, zonder paginafouten of overloop. Resolveroverrides hebben alleen de nog oude systeemcache overbrugd; hostname/SNI en certificaatvalidatie bleven normaal aan. Anonieme mailbeheer-API's geven403; publieke bootstrap bevat geen private lidmaatschappen of serversleutel. Er is geen echte OTP-/testmail verstuurd en geen volledige mailbox-login geclaimd.
+
+Alle 13 conserveringschecks slagen voor de verse nulmeting 12:43:37 en nameting 12:50:33UTC: 26 andere services/PIDs, bestaande sites, accounts, pointers, proxies, SSH, hostprofielen, runners, gedeelde lock/tmpfiles/groepsleden en bekende healthinhoud blijven gelijk. De eigen runners zijn ongeregistreerd en disabled. Omdat dit de eerste release is, bestaat nog geen previous-paar voor een approllback; een volgende gezonde release bewaart dat paar automatisch. Kandidaatbouw, activeren en rollback blijven afzonderlijke handmatige opdrachten.
+
+Bewijs: [release](evidence/release-2026-11-25.json), [TLS/toegangsgrenzen](evidence/public-tls-2026-11-25.json), [live browser](evidence/live-browser-2026-11-25.json), [conservering](evidence/conservation-2026-11-25.json) en [veilige runtimeoverdracht](evidence/runtime-provisioning-2026-11-25.json). De security advisor geeft na bootstrap alleen de algemene Auth-waarschuwing over uitgeschakelde gelekte-wachtwoordcontrole en de drie bedoelde RLS-info's. Het platform biedt uitsluitend OTP-login; er is geen gebruikerswachtwoord aangeleverd. Zie de [Auth-aanbeveling](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection). De connector kan die Auth-instelling niet wijzigen.
+
+De volgende paragrafen bewaren de eerdere voorbereidingsmetingen.
+
+## 25 november 2026: eerdere hostvoorbereiding
 
 Latere voortgang op dezelfde dag: beide moderne serverkeys zijn automatisch afgeschermd op de VPS geplaatst, met echte readonly admin-API/state-RPC gevalideerd. De tijdelijke encrypt-only overdrachtsfuncties zijn gesloten (HTTP410); hun private overdrachtsmateriaal is verwijderd. De eigenaar bevestigt tevens de HTML-templates, OTP-lengte 6 en Site URLs. Het onderstaande hostvoorbereidingsbewijs is de eerdere nulmeting; kandidaat/activatie krijgt apart bewijs. Zie [runtimeoverdracht](evidence/runtime-provisioning-2026-11-25.json).
 

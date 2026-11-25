@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-11-25T12:50:25.153Z",
+  "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b",
+  "environments": {
+    "staging": {
+      "origin": "https://hvcup-staging.dgwebservices.nl",
+      "homeHttpStatus": 200,
+      "health": {
+        "ok": true,
+        "service": "haagv",
+        "environment": "staging",
+        "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b"
+      },
+      "ready": {
+        "ok": true,
+        "service": "haagv",
+        "dataMode": "supabase",
+        "mail": "unconfigured"
+      },
+      "anonymousPrivateMemberships": 0,
+      "anonymousMailAdminHttpStatus": 403,
+      "loginFormVisible": true,
+      "viewportsWithoutOverflow": [
+        390,
+        1280
+      ],
+      "pageErrors": [],
+      "tlsVerification": "Browser default certificate validation; hostname preserved; resolver override only"
+    },
+    "production": {
+      "origin": "https://hvcup.dgwebservices.nl",
+      "homeHttpStatus": 200,
+      "health": {
+        "ok": true,
+        "service": "haagv",
+        "environment": "production",
+        "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b"
+      },
+      "ready": {
+        "ok": true,
+        "service": "haagv",
+        "dataMode": "supabase",
+        "mail": "unconfigured"
+      },
+      "anonymousPrivateMemberships": 0,
+      "anonymousMailAdminHttpStatus": 403,
+      "loginFormVisible": true,
+      "viewportsWithoutOverflow": [
+        390,
+        1280
+      ],
+      "pageErrors": [],
+      "tlsVerification": "Browser default certificate validation; hostname preserved; resolver override only"
+    }
+  },
+  "realMailSent": false
+}

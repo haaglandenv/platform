@@ -1,0 +1,222 @@
+{
+  "checkedAt": "2026-11-25T12:50:33.779412+00:00",
+  "checks": [
+    {
+      "environment": "staging",
+      "domain": "hvcup-staging.dgwebservices.nl",
+      "tlsVersion": "TLSv1.3",
+      "cipher": "TLS_AES_128_GCM_SHA256",
+      "certificateVerified": true,
+      "issuer": {
+        "countryName": "US",
+        "organizationName": "Let's Encrypt",
+        "commonName": "YE1"
+      },
+      "subjectAltName": [
+        [
+          "DNS",
+          "hvcup-staging.dgwebservices.nl"
+        ]
+      ],
+      "notBefore": "Nov 25 11:50:42 2026 GMT",
+      "notAfter": "Feb 23 11:50:41 2027 GMT"
+    },
+    {
+      "environment": "staging",
+      "url": "http://hvcup-staging.dgwebservices.nl/",
+      "exitCode": 0,
+      "status": "308",
+      "headers": [
+        "HTTP/1.1 308 Permanent Redirect",
+        "Connection: close",
+        "Location: https://hvcup-staging.dgwebservices.nl/",
+        "Server: Caddy",
+        "Date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "Content-Length: 0"
+      ]
+    },
+    {
+      "environment": "staging",
+      "url": "https://hvcup-staging.dgwebservices.nl/api/v1/admin/mail-settings",
+      "exitCode": 0,
+      "status": "403",
+      "headers": [
+        "HTTP/2 403 ",
+        "alt-svc: h3=\":443\"; ma=2592000",
+        "cache-control: no-store",
+        "content-type: application/json; charset=utf-8",
+        "date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "referrer-policy: no-referrer",
+        "via: 1.1 Caddy",
+        "x-content-type-options: nosniff",
+        "x-content-type-options: nosniff",
+        "x-frame-options: DENY",
+        "x-robots-tag: noindex, nofollow, noarchive",
+        "content-length: 104"
+      ],
+      "errorCode": "FORBIDDEN"
+    },
+    {
+      "environment": "staging",
+      "url": "https://hvcup-staging.dgwebservices.nl/api/v1/admin/mail-templates",
+      "exitCode": 0,
+      "status": "403",
+      "headers": [
+        "HTTP/2 403 ",
+        "alt-svc: h3=\":443\"; ma=2592000",
+        "cache-control: no-store",
+        "content-type: application/json; charset=utf-8",
+        "date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "referrer-policy: no-referrer",
+        "via: 1.1 Caddy",
+        "x-content-type-options: nosniff",
+        "x-content-type-options: nosniff",
+        "x-frame-options: DENY",
+        "x-robots-tag: noindex, nofollow, noarchive",
+        "content-length: 104"
+      ],
+      "errorCode": "FORBIDDEN"
+    },
+    {
+      "environment": "staging",
+      "url": "https://hvcup-staging.dgwebservices.nl/api/v1/bootstrap",
+      "exitCode": 0,
+      "status": "200",
+      "headers": [
+        "HTTP/2 200 ",
+        "alt-svc: h3=\":443\"; ma=2592000",
+        "cache-control: no-store",
+        "content-type: application/json; charset=utf-8",
+        "date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "referrer-policy: no-referrer",
+        "vary: Accept-Encoding",
+        "via: 1.1 Caddy",
+        "x-content-type-options: nosniff",
+        "x-content-type-options: nosniff",
+        "x-frame-options: DENY",
+        "x-robots-tag: noindex, nofollow, noarchive",
+        "content-length: 547"
+      ],
+      "publicBootstrapJson": true,
+      "serverKeyNotExposed": true,
+      "topLevelKeys": [
+        "apiVersion",
+        "version",
+        "mode",
+        "user",
+        "memberships",
+        "activeMembership",
+        "capabilities",
+        "data",
+        "config"
+      ]
+    },
+    {
+      "environment": "production",
+      "domain": "hvcup.dgwebservices.nl",
+      "tlsVersion": "TLSv1.3",
+      "cipher": "TLS_AES_128_GCM_SHA256",
+      "certificateVerified": true,
+      "issuer": {
+        "countryName": "US",
+        "organizationName": "Let's Encrypt",
+        "commonName": "YE2"
+      },
+      "subjectAltName": [
+        [
+          "DNS",
+          "hvcup.dgwebservices.nl"
+        ]
+      ],
+      "notBefore": "Nov 25 11:50:42 2026 GMT",
+      "notAfter": "Feb 23 11:50:41 2027 GMT"
+    },
+    {
+      "environment": "production",
+      "url": "http://hvcup.dgwebservices.nl/",
+      "exitCode": 0,
+      "status": "308",
+      "headers": [
+        "HTTP/1.1 308 Permanent Redirect",
+        "Connection: close",
+        "Location: https://hvcup.dgwebservices.nl/",
+        "Server: Caddy",
+        "Date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "Content-Length: 0"
+      ]
+    },
+    {
+      "environment": "production",
+      "url": "https://hvcup.dgwebservices.nl/api/v1/admin/mail-settings",
+      "exitCode": 0,
+      "status": "403",
+      "headers": [
+        "HTTP/2 403 ",
+        "alt-svc: h3=\":443\"; ma=2592000",
+        "cache-control: no-store",
+        "content-type: application/json; charset=utf-8",
+        "date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "referrer-policy: no-referrer",
+        "via: 1.1 Caddy",
+        "x-content-type-options: nosniff",
+        "x-content-type-options: nosniff",
+        "x-frame-options: DENY",
+        "content-length: 104"
+      ],
+      "errorCode": "FORBIDDEN"
+    },
+    {
+      "environment": "production",
+      "url": "https://hvcup.dgwebservices.nl/api/v1/admin/mail-templates",
+      "exitCode": 0,
+      "status": "403",
+      "headers": [
+        "HTTP/2 403 ",
+        "alt-svc: h3=\":443\"; ma=2592000",
+        "cache-control: no-store",
+        "content-type: application/json; charset=utf-8",
+        "date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "referrer-policy: no-referrer",
+        "via: 1.1 Caddy",
+        "x-content-type-options: nosniff",
+        "x-content-type-options: nosniff",
+        "x-frame-options: DENY",
+        "content-length: 104"
+      ],
+      "errorCode": "FORBIDDEN"
+    },
+    {
+      "environment": "production",
+      "url": "https://hvcup.dgwebservices.nl/api/v1/bootstrap",
+      "exitCode": 0,
+      "status": "200",
+      "headers": [
+        "HTTP/2 200 ",
+        "alt-svc: h3=\":443\"; ma=2592000",
+        "cache-control: no-store",
+        "content-type: application/json; charset=utf-8",
+        "date: Wed, 25 Nov 2026 12:50:33 GMT",
+        "referrer-policy: no-referrer",
+        "vary: Accept-Encoding",
+        "via: 1.1 Caddy",
+        "x-content-type-options: nosniff",
+        "x-content-type-options: nosniff",
+        "x-frame-options: DENY",
+        "content-length: 547"
+      ],
+      "publicBootstrapJson": true,
+      "serverKeyNotExposed": true,
+      "topLevelKeys": [
+        "apiVersion",
+        "version",
+        "mode",
+        "user",
+        "memberships",
+        "activeMembership",
+        "capabilities",
+        "data",
+        "config"
+      ]
+    }
+  ]
+}

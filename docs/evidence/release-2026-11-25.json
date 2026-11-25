@@ -1,0 +1,107 @@
+{
+  "checkedAt": "2026-11-25T12:51:44.991292+00:00",
+  "environments": {
+    "staging": {
+      "releaseId": "e21809120e0520effe8b9d9a7a1d02a9276bf74b-1795610774363524309-1",
+      "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b",
+      "artifactSha256": "470578592c7b2cabd87216d7763948aec75d0bab52de0048276d26d8adce6f2d",
+      "ci": {
+        "jobId": 139212924963,
+        "jobName": "verify",
+        "runAttempt": 1,
+        "runId": 45616434531,
+        "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b",
+        "workflow": "ci.yml"
+      },
+      "appUnit": {
+        "MainPID": "1514737",
+        "ActiveState": "active",
+        "SubState": "running",
+        "UnitFileState": "enabled"
+      },
+      "rawSecretFile": {
+        "owner": "root:root",
+        "mode": "0600",
+        "valuesReadOrPrinted": false
+      },
+      "healthyProofPresent": true,
+      "runnersRemainUnregistered": true,
+      "firstAdministrator": {
+        "email": "info@dgwebservices.nl",
+        "managedRole": "leadership",
+        "authUserCountAtBootstrap": 1,
+        "managedMembershipCountAtBootstrap": 1,
+        "passwordProvidedByPlatform": false,
+        "emailInitiallyConfirmed": false,
+        "otpRequired": true,
+        "mailSentByBootstrap": false
+      },
+      "authSettings": {
+        "templatesOtp6SiteUrlSmtpOwnerConfirmed": true,
+        "managementApiReadbackAvailable": false,
+        "liveMailboxDeliveryTested": false
+      },
+      "securityAdvisorAfterBootstrap": {
+        "errors": 0,
+        "warnings": [
+          "auth_leaked_password_protection"
+        ],
+        "expectedInfoCount": 3,
+        "review": "Password protection is a separate Auth configuration recommendation. The platform exposes only OTP login and supplied no password during bootstrap. Supabase Admin Auth internally generates a random password hash when no password is supplied. No database access/RPC warning remains.",
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+        "authCreationSource": "https://github.com/supabase/auth/blob/master/internal/api/admin.go"
+      }
+    },
+    "production": {
+      "releaseId": "e21809120e0520effe8b9d9a7a1d02a9276bf74b-1795610842169232587-1",
+      "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b",
+      "artifactSha256": "337712be7c986ecbf3a6b6f7c458c33dae65e6c7b0068c317c8b8d6a21f29358",
+      "ci": {
+        "jobId": 139212924963,
+        "jobName": "verify",
+        "runAttempt": 1,
+        "runId": 45616434531,
+        "sha": "e21809120e0520effe8b9d9a7a1d02a9276bf74b",
+        "workflow": "ci.yml"
+      },
+      "appUnit": {
+        "MainPID": "1515999",
+        "ActiveState": "active",
+        "SubState": "running",
+        "UnitFileState": "enabled"
+      },
+      "rawSecretFile": {
+        "owner": "root:root",
+        "mode": "0600",
+        "valuesReadOrPrinted": false
+      },
+      "healthyProofPresent": true,
+      "runnersRemainUnregistered": true,
+      "firstAdministrator": {
+        "email": "info@dgwebservices.nl",
+        "managedRole": "leadership",
+        "authUserCountAtBootstrap": 1,
+        "managedMembershipCountAtBootstrap": 1,
+        "passwordProvidedByPlatform": false,
+        "emailInitiallyConfirmed": false,
+        "otpRequired": true,
+        "mailSentByBootstrap": false
+      },
+      "authSettings": {
+        "templatesOtp6SiteUrlSmtpOwnerConfirmed": true,
+        "managementApiReadbackAvailable": false,
+        "liveMailboxDeliveryTested": false
+      },
+      "securityAdvisorAfterBootstrap": {
+        "errors": 0,
+        "warnings": [
+          "auth_leaked_password_protection"
+        ],
+        "expectedInfoCount": 3,
+        "review": "Password protection is a separate Auth configuration recommendation. The platform exposes only OTP login and supplied no password during bootstrap. Supabase Admin Auth internally generates a random password hash when no password is supplied. No database access/RPC warning remains.",
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+        "authCreationSource": "https://github.com/supabase/auth/blob/master/internal/api/admin.go"
+      }
+    }
+  }
+}
