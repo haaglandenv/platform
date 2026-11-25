@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { routes } from "./routes.js";
+import { createMailTemplateManager } from "./mail-templates.js";
 
 const app = document.querySelector("[data-app]");
 const dialog = document.querySelector("[data-editor]");
@@ -221,7 +222,9 @@ async function request(path, { method = "GET", body, signal } = {}) {
   }
   return value;
 }
+const mailTemplates = createMailTemplateManager({request, errorMessage, toast});
 function clearPrivateContext() {
+  mailTemplates.clear();
   state.contextEpoch++;
   state.adminMemberships = [];
   state.email = "";
@@ -2009,7 +2012,7 @@ function manualPage() {
 function settingsPage() {
   const gate = accessGate("settings.manage", "Alleen platformbeheer");
   if (gate) return gate;
-  return `${panel(heading("Aanmelding en verbinding") + `<dl class="fact-grid"><div><dt>Gegevensmodus</dt><dd>${esc(state.snapshot.mode)}</dd></div><div><dt>Supabase-aanmelding</dt><dd>${state.snapshot.config?.auth?.supabaseUrl && state.snapshot.config?.auth?.publishableKey ? "Publieke configuratie aanwezig" : "Nog aan te sluiten"}</dd></div><div><dt>Lokale sessie</dt><dd>${state.snapshot.config?.localSessionEnabled ? "Alleen lokale ontwikkeling" : "Uitgeschakeld"}</dd></div></dl><p class="muted">OTP-mail loopt via Supabase Auth met Resend SMTP. Overige platformmail gebruikt de serverinstellingen hieronder.</p>`)}${panel(heading("Platformmail via Resend", "De API-sleutel wordt alleen naar de server geschreven. Een opgeslagen sleutel is nooit terug te lezen.") + `<div data-mail-settings role="status">Instellingen ophalen…</div>`)}${panel(heading("Uitgaande meldingen", "Meldingen wachten totdat de geverifieerde ontvanger en mailconfiguratie beschikbaar zijn.", button("Wachtende meldingen verwerken", "mail-outbox-process")) + `<div data-mail-outbox role="status">Uitgaande meldingen ophalen…</div>`)}${panel(heading("Beheerde lidmaatschappen", "Koppel uitsluitend geverifieerde gebruikers-ID’s en de juiste werkcontext.", entityButton("membership", "Lidmaatschap toevoegen")) + `<p class="muted">Een gebruikersrol wordt centraal beheerd. Een zelfgekozen profielwaarde geeft geen extra toegang.</p><div data-admin-memberships role="status">Lidmaatschappen ophalen…</div>`)}`;
+  return `${panel(heading("Aanmelding en verbinding") + `<dl class="fact-grid"><div><dt>Gegevensmodus</dt><dd>${esc(state.snapshot.mode)}</dd></div><div><dt>Supabase-aanmelding</dt><dd>${state.snapshot.config?.auth?.supabaseUrl && state.snapshot.config?.auth?.publishableKey ? "Publieke configuratie aanwezig" : "Nog aan te sluiten"}</dd></div><div><dt>Lokale sessie</dt><dd>${state.snapshot.config?.localSessionEnabled ? "Alleen lokale ontwikkeling" : "Uitgeschakeld"}</dd></div></dl><p class="muted">OTP-mail loopt via Supabase Auth met Resend SMTP. Overige platformmail gebruikt de serverinstellingen hieronder.</p>`)}${panel(heading("Platformmail via Resend", "De API-sleutel wordt alleen naar de server geschreven. Een opgeslagen sleutel is nooit terug te lezen.") + `<div data-mail-settings role="status">Instellingen ophalen…</div>`)}${panel(heading("E-mailtemplates", "Beheer de inhoud en herken welk kanaal een bericht verstuurt.") + `<div data-mail-templates role="region" aria-label="E-mailtemplates beheren">Templates ophalen…</div>`)}${panel(heading("Uitgaande meldingen", "Meldingen wachten totdat de geverifieerde ontvanger en mailconfiguratie beschikbaar zijn.", button("Wachtende meldingen verwerken", "mail-outbox-process")) + `<div data-mail-outbox role="status">Uitgaande meldingen ophalen…</div>`)}${panel(heading("Beheerde lidmaatschappen", "Koppel uitsluitend geverifieerde gebruikers-ID’s en de juiste werkcontext.", entityButton("membership", "Lidmaatschap toevoegen")) + `<p class="muted">Een gebruikersrol wordt centraal beheerd. Een zelfgekozen profielwaarde geeft geen extra toegang.</p><div data-admin-memberships role="status">Lidmaatschappen ophalen…</div>`)}`;
 }
 async function loadMailSettings() {
   const root = document.querySelector("[data-mail-settings]");
@@ -2332,6 +2335,7 @@ function render() {
   app.innerHTML = `${workspaceBar()}<section id="${esc(info.id)}" data-page data-title="${esc(info.title)}">${hero(info)}<div class="platform-content">${content}</div></section>`;
   if (info.id === "instellingen" && can("settings.manage")) {
     loadMailSettings();
+    mailTemplates.mount(document.querySelector("[data-mail-templates]"));
     loadMailOutbox();
     loadAdminMemberships();
   }
@@ -2433,6 +2437,10 @@ async function submitAuth(form) {
     return;
   }
   state.email = String(new FormData(form).get("email") || "").trim();
+  if (state.otpSent && !/^[0-9]{6}$/.test(String(new FormData(form).get("code") || ""))) {
+    feedback.textContent = "Vul precies zes cijfers in voor je eenmalige code.";
+    return;
+  }
   state.authBusy = true;
   form.querySelector("[type=submit]").disabled = true;
   try {

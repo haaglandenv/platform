@@ -19,12 +19,13 @@ concurrency:
 jobs:
   preflight:
     if: github.repository == 'haaglandenv/platform' && github.ref == 'refs/heads/main'
+    environment: staging
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
       GH_TOKEN: ${{ github.token }}
-      HAAGV_APP_ORIGIN: ${{ vars.HAAGV_APP_ORIGIN }}
-      HAAGV_DATA_MODE: ${{ vars.HAAGV_DATA_MODE }}
+      HVCUP_APP_ORIGIN: ${{ vars.HVCUP_APP_ORIGIN }}
+      HVCUP_DATA_MODE: ${{ vars.HVCUP_DATA_MODE }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       RELEASE_SHA: ${{ inputs.release_sha }}
@@ -39,16 +40,17 @@ jobs:
         run: |
           set -euo pipefail
           set +x
-          python3 -c 'import json,os; names=("HAAGV_APP_ORIGIN","HAAGV_DATA_MODE","NEXT_PUBLIC_SUPABASE_URL","NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"); print(json.dumps({"githubToken":os.environ["GH_TOKEN"],"publicConfig":{n:os.environ.get(n,"") for n in names}}))' | python3 ops/release.py preflight --sha "$RELEASE_SHA" --config-id "$CONFIG_ID"
+          python3 -c 'import json,os; names=("HVCUP_APP_ORIGIN","HVCUP_DATA_MODE","NEXT_PUBLIC_SUPABASE_URL","NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"); print(json.dumps({"githubToken":os.environ["GH_TOKEN"],"publicConfig":{n:os.environ.get(n,"") for n in names}}))' | python3 ops/release.py preflight --environment staging --sha "$RELEASE_SHA" --config-id "$CONFIG_ID"
   candidate:
     needs: preflight
     if: github.repository == 'haaglandenv/platform' && github.ref == 'refs/heads/main'
+    environment: staging
     runs-on: [self-hosted, Linux, X64, dg-vps-08, haagv-platform-staging]
     timeout-minutes: 50
     env:
       GH_TOKEN: ${{ github.token }}
-      HAAGV_APP_ORIGIN: ${{ vars.HAAGV_APP_ORIGIN }}
-      HAAGV_DATA_MODE: ${{ vars.HAAGV_DATA_MODE }}
+      HVCUP_APP_ORIGIN: ${{ vars.HVCUP_APP_ORIGIN }}
+      HVCUP_DATA_MODE: ${{ vars.HVCUP_DATA_MODE }}
       NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
       RELEASE_SHA: ${{ inputs.release_sha }}
@@ -60,7 +62,7 @@ jobs:
           set -euo pipefail
           set +x
           invoke() {
-            python3 -c 'import json,os; names=("HAAGV_APP_ORIGIN","HAAGV_DATA_MODE","NEXT_PUBLIC_SUPABASE_URL","NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"); print(json.dumps({"githubToken":os.environ["GH_TOKEN"],"publicConfig":{n:os.environ.get(n,"") for n in names}}))' | sudo -n /usr/local/libexec/haagv-platform-staging/release.py build --sha "$RELEASE_SHA" --config-id "$CONFIG_ID" --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT"
+            python3 -c 'import json,os; names=("HVCUP_APP_ORIGIN","HVCUP_DATA_MODE","NEXT_PUBLIC_SUPABASE_URL","NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"); print(json.dumps({"githubToken":os.environ["GH_TOKEN"],"publicConfig":{n:os.environ.get(n,"") for n in names}}))' | sudo -n /usr/local/libexec/haagv-platform-staging/release.py build --sha "$RELEASE_SHA" --config-id "$CONFIG_ID" --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT"
           }
           set +e
           invoke

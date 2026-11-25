@@ -7,14 +7,14 @@ export const isLoopback = (hostname) =>
     hostname,
   );
 export function validatePublicConfig(env = process.env) {
-  const dataMode = env.HAAGV_DATA_MODE || "local";
+  const dataMode = env.HVCUP_DATA_MODE || "local";
   if (!["local", "supabase"].includes(dataMode))
-    throw new Error("HAAGV_DATA_MODE moet local of supabase zijn.");
+    throw new Error("HVCUP_DATA_MODE moet local of supabase zijn.");
   let url;
   try {
-    url = new URL(env.HAAGV_APP_ORIGIN || "http://127.0.0.1:4175");
+    url = new URL(env.HVCUP_APP_ORIGIN || "http://127.0.0.1:4175");
   } catch {
-    throw new Error("HAAGV_APP_ORIGIN is geen geldige origin.");
+    throw new Error("HVCUP_APP_ORIGIN is geen geldige origin.");
   }
   if (
     !["http:", "https:"].includes(url.protocol) ||
@@ -25,7 +25,7 @@ export function validatePublicConfig(env = process.env) {
     (url.pathname && url.pathname !== "/")
   )
     throw new Error(
-      "HAAGV_APP_ORIGIN moet een HTTP(S)-origin zonder pad zijn.",
+      "HVCUP_APP_ORIGIN moet een HTTP(S)-origin zonder pad zijn.",
     );
   const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL || "";
   const publishableKey = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "";

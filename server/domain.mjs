@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { NOTIFICATION_TEMPLATE_IDS } from "./mail-templates.mjs";
 
 export class PlatformError extends Error {
   constructor(status, code, message, details) {
@@ -1926,6 +1927,22 @@ function enqueueNotification(
   }
   recipientUserIds = [...new Set(recipientUserIds.filter(Boolean))];
   if (!recipientUserIds.length) return;
+  const match = result.match || (type === "match.upsert" ? result.record : null);
+  const teamName = (id) => state.data.teams.find((team) => team.id === id)?.name || "Team nog te bepalen";
+  const matchLabel = match ? teamName(match.homeTeamId) + " – " + teamName(match.awayTeamId) : "Wedstrijd";
+  const statusLabel = (status) => ({ approved: "Goedgekeurd", rejected: "Afgewezen", returned: "Teruggestuurd", upheld: "Toegewezen", corrected: "Uitslag gecorrigeerd" })[status] || status;
+  let templateValues;
+  if (type === "message.send") templateValues = { message_subject: payload.subject, message_body: payload.body };
+  if (type === "assignment.set") templateValues = { match_label: matchLabel };
+  if (type === "registration.review") templateValues = {
+    team_name: teamName(result.registration.teamId), review_status: statusLabel(payload.decision), review_reason: result.registration.decision.reason,
+  };
+  if (type === "match.upsert") templateValues = {
+    match_label: matchLabel, match_date: match.date || "Nog te bepalen", match_time: match.time || "Nog te bepalen", venue: match.venue || "Nog te bepalen",
+  };
+  if (type === "objection.decide") templateValues = {
+    match_label: matchLabel, decision: statusLabel(payload.decision), reason: result.objection.decision.reason,
+  };
   state.mailOutbox ||= [];
   state.mailOutbox.push({
     id: idFor("HV-MAIL"),
@@ -1940,6 +1957,8 @@ function enqueueNotification(
     createdAt: now,
     commandType: type,
     requestId,
+    templateId: NOTIFICATION_TEMPLATE_IDS[type],
+    templateValues,
   });
 }
 function validateEvent(state, match, event) {

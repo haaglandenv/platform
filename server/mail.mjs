@@ -6,6 +6,15 @@ import {
 } from "node:crypto";
 import { mkdir, readFile, lstat, open, rename, unlink } from "node:fs/promises";
 import path from "node:path";
+import {
+  MAIL_TEMPLATE_CATALOG,
+  templateDefinition,
+  templateItem,
+  validateTemplate,
+  renderTemplate,
+  exportAuthTemplate,
+  MailTemplateError,
+} from "./mail-templates.mjs";
 export class MailError extends Error {
   constructor(code, message, status = 400) {
     super(message);
@@ -91,6 +100,7 @@ export function createMailService({
   encryptionKey: secret,
   fetchImpl = globalThis.fetch,
   now = () => Date.now(),
+  appOrigin = "https://example.invalid",
 } = {}) {
   if (!file)
     throw new MailError(
@@ -170,7 +180,7 @@ export function createMailService({
       );
     }
   }
-  async function send({ to, subject, text, idempotencyKey }) {
+  async function send({ to, subject, text, html, idempotencyKey }) {
     const settings = await load();
     if (!settings.enabled || !settings.apiKey || !fromAddress(settings.from))
       throw new MailError(
@@ -186,7 +196,8 @@ export function createMailService({
       /[\r\n]/.test(subject) ||
       typeof text !== "string" ||
       !text.trim() ||
-      text.length > 20000
+      text.length > 20000 ||
+      (html !== undefined && (typeof html !== "string" || html.length > 80000))
     )
       invalid("Het mailbericht is ongeldig.");
     let response;
@@ -203,6 +214,7 @@ export function createMailService({
           to: [to],
           subject,
           text,
+          ...(html ? { html } : {}),
           ...(settings.replyTo ? { reply_to: settings.replyTo } : {}),
         }),
         signal: AbortSignal.timeout(10000),
@@ -237,6 +249,52 @@ export function createMailService({
         502,
       );
     return { id: data.id, status: "accepted" };
+  }
+  function checkFields(input, allowed) {
+    if (!input || typeof input !== "object" || Array.isArray(input) ||
+      Object.keys(input).some((field) => !allowed.includes(field)))
+      throw new MailTemplateError("MAIL_TEMPLATE_INVALID", "De templateaanvraag bevat onbekende of ongeldige velden.");
+  }
+  function checkRevision(input, item) {
+    if (input.expectedRevision !== undefined && (!Number.isSafeInteger(input.expectedRevision) || input.expectedRevision < 0))
+      throw new MailTemplateError("MAIL_TEMPLATE_INVALID", "De templaterevisie is ongeldig.");
+    if (input.expectedRevision !== undefined && input.expectedRevision !== item.revision)
+      throw new MailTemplateError("MAIL_TEMPLATE_CONFLICT", "Deze template is ondertussen gewijzigd. Laad de actuele versie voordat je opslaat.", 409);
+  }
+  function auditUser(user) {
+    if (!user?.id || typeof user.id !== "string")
+      throw new MailError("AUTH_REQUIRED", "Log in voordat je mailtemplates beheert.", 401);
+    return user.id;
+  }
+  async function changeTemplate(id, input, user, reset = false) {
+    const userId = auditUser(user);
+    checkFields(input, reset ? ["expectedRevision"] : ["subject", "text", "html", "expectedRevision"]);
+    const settings = await load(), current = templateItem(id, settings.templates);
+    checkRevision(input, current);
+    const content = validateTemplate(id, reset ? templateDefinition(id) : input);
+    const updatedAt = new Date(now()).toISOString();
+    settings.templates ||= {};
+    settings.templates[id] = { ...content, revision: current.revision + 1, updatedAt, status: reset ? "default" : "custom" };
+    settings.templateAudit = [...(settings.templateAudit || []), {
+      id: randomUUID(), action: reset ? "reset" : "update", templateId: id,
+      revision: current.revision + 1, userId, at: updatedAt,
+    }].slice(-200);
+    await save(settings);
+    return templateItem(id, settings.templates);
+  }
+  async function testTemplate(id, { to, user, requestId = randomUUID() }) {
+    auditUser(user);
+    if (templateDefinition(id).type !== "resend-api")
+      throw new MailTemplateError("AUTH_PROVIDER_ONLY", "Supabase Auth verstuurt inlogcodes. Exporteer deze template en publiceer hem afzonderlijk bij Supabase; een Resend-test is niet beschikbaar.", 409);
+    if (typeof requestId !== "string" || !requestId || requestId.length > 100 || !/^[a-zA-Z0-9._-]+$/.test(requestId))
+      invalid("De aanvraagcode is ongeldig.");
+    const recent = (attempts.get(user.id) || []).filter((at) => now() - at < 60000);
+    if (recent.length >= 3)
+      throw new MailError("MAIL_RATE_LIMITED", "Wacht een minuut voordat je opnieuw een testmail verstuurt.", 429);
+    attempts.set(user.id, [...recent, now()]);
+    const settings = await load();
+    const rendered = renderTemplate(id, templateItem(id, settings.templates), {}, { appOrigin });
+    return send({ to, ...rendered, idempotencyKey: "haagv-test-" + user.id + "-" + requestId });
   }
   return {
     getSettings: () => lock(async () => masked(await load())),
@@ -298,38 +356,30 @@ export function createMailService({
         await save(next);
         return masked(next);
       }),
-    async sendTest({ to, user, requestId = randomUUID() }) {
-      if (!user?.id)
-        throw new MailError(
-          "AUTH_REQUIRED",
-          "Log in voordat je een testmail verstuurt.",
-          401,
-        );
-      if (
-        typeof requestId !== "string" ||
-        !requestId ||
-        requestId.length > 100 ||
-        !/^[a-zA-Z0-9._-]+$/.test(requestId)
-      )
-        invalid("De aanvraagcode is ongeldig.");
-      const recent = (attempts.get(user.id) || []).filter(
-        (at) => now() - at < 60000,
-      );
-      if (recent.length >= 3)
-        throw new MailError(
-          "MAIL_RATE_LIMITED",
-          "Wacht een minuut voordat je opnieuw een testmail verstuurt.",
-          429,
-        );
-      attempts.set(user.id, [...recent, now()]);
-      return send({
-        to,
-        subject: "Haaglanden Voetbal · Testmail",
-        text: "Dit is de aangevraagde testmail van het Haaglanden Voetbal-platform. De OTP-inlogcodes worden afzonderlijk door Supabase Auth via SMTP verzonden.",
-        idempotencyKey: "haagv-test-" + user.id + "-" + requestId,
-      });
-    },
-    async sendNotification({ id, to, subject, text }) {
+    getTemplates: () => lock(async () => {
+      const settings = await load();
+      return MAIL_TEMPLATE_CATALOG.map((entry) => ({
+        ...templateItem(entry.id, settings.templates),
+        configured: entry.type === "resend-api" ? !!settings.enabled && !!settings.apiKey : null,
+      }));
+    }),
+    getTemplate: (id) => lock(async () => templateItem(id, (await load()).templates)),
+    getTemplateAudit: () => lock(async () => (await load()).templateAudit || []),
+    updateTemplate: (id, input, { user } = {}) => lock(() => changeTemplate(id, input, user)),
+    resetTemplate: (id, input, { user } = {}) => lock(() => changeTemplate(id, input, user, true)),
+    renderTemplate: (id, input = {}) => lock(async () => {
+      checkFields(input, ["subject", "text", "html", "values"]);
+      const draft = ["subject", "text", "html"].some((field) => input[field] !== undefined);
+      const source = draft ? validateTemplate(id, input) : templateItem(id, (await load()).templates);
+      return renderTemplate(id, source, input.values === undefined ? {} : input.values, { appOrigin });
+    }),
+    exportTemplate: (id) => lock(async () => {
+      const item = templateItem(id, (await load()).templates);
+      return { ...exportAuthTemplate(id, item, { appOrigin }), revision: item.revision };
+    }),
+    testTemplate: (id, input) => testTemplate(id, input),
+    sendTest: (input) => testTemplate("system.test", input),
+    async sendNotification({ id, to, subject, text, templateId, values }) {
       if (
         typeof id !== "string" ||
         !id ||
@@ -337,10 +387,14 @@ export function createMailService({
         !/^[a-zA-Z0-9._-]+$/.test(id)
       )
         invalid("De mailaanvraag is ongeldig.");
+      const rendered = templateId
+        ? renderTemplate(templateId, templateItem(templateId, (await load()).templates), values || {}, { appOrigin })
+        : { subject, text };
+      if (templateId && templateDefinition(templateId).type !== "resend-api")
+        throw new MailTemplateError("AUTH_PROVIDER_ONLY", "Inlogcodes worden alleen door Supabase Auth verstuurd.", 409);
       return send({
         to,
-        subject,
-        text,
+        ...rendered,
         idempotencyKey: "haagv-notification-" + id,
       });
     },

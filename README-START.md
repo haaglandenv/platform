@@ -20,12 +20,12 @@ Open <http://127.0.0.1:4175/>. Standaard is alleen publiek lezen beschikbaar. Vo
 
 Volg [Supabase instellen](docs/supabase-setup.md), daarna de [releasevoorbereiding](docs/deployment.md). GitHub gebruikt uitsluitend deze vier publieke variabelen:
 
-- `HAAGV_APP_ORIGIN`
-- `HAAGV_DATA_MODE`
+- `HVCUP_APP_ORIGIN`
+- `HVCUP_DATA_MODE`
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 
-De voorbeeldnamen staan ook in `.env.example`. Geheimen staan uitsluitend in de afgeschermde serverruntime. Supabase Auth verstuurt de OTP-codes via Resend SMTP. De overige mail gebruikt de server-side Resend API; een bevoegde beheerder vult de sleutel en afzender in op **Instellingen**. De sleutel wordt versleuteld opgeslagen en is niet terug te lezen. Een Resend-acceptatie is geen bewijs van aflevering.
+De voorbeeldnamen staan ook in `.env.example`. Geheimen staan uitsluitend in de afgeschermde serverruntime. Supabase Auth verstuurt de OTP-codes via Resend SMTP. De overige mail gebruikt de server-side Resend API; een bevoegde beheerder vult de sleutel en afzender in op **Instellingen**. De sleutel wordt versleuteld opgeslagen en is niet terug te lezen. Onder **E-mailtemplates** zijn acht templates met shortcodes, HTML/tekst, preview, revisies en herstel te beheren. De twee Supabase-templates worden afzonderlijk gepubliceerd; de standaard HTML staat in [emails/supabase](emails/supabase/README.md). Web en Android accepteren precies zes cijfers. Een Resend-acceptatie is geen bewijs van aflevering.
 
 ## Controle
 

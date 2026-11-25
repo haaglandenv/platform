@@ -9,8 +9,8 @@ module.exports = {
   plugins: [["expo-secure-store", { configureAndroidBackup: true }]],
   extra: {
     platform: {
-      origin: process.env.HAAGV_APP_ORIGIN || "http://10.0.2.2:4175",
-      dataMode: process.env.HAAGV_DATA_MODE || "local",
+      origin: process.env.HVCUP_APP_ORIGIN || "http://10.0.2.2:4175",
+      dataMode: process.env.HVCUP_DATA_MODE || "local",
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
       publishableKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || "",
     },

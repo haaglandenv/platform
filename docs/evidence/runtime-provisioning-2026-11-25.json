@@ -1,0 +1,27 @@
+{
+  "checkedAt": "2026-11-25T12:42:11.558410+00:00",
+  "method": "Owner-authorized, proof-authenticated, fixed-recipient RSA4096/OAEP-SHA256 transfer of modern default key; plaintext only inside Supabase and the target VPS.",
+  "helperSha256": "2373ef0c5b9557d378985a2a0b68f5eef07905fb29bd990b2394a4961c9ec0ea",
+  "environments": {
+    "staging": {
+      "modernRuntimeKeyProvisioned": true,
+      "readonlyAdminApiValidated": true,
+      "readonlyStateRpcValidated": true,
+      "emptyUserSample": 0,
+      "emptyMembershipCount": 0,
+      "privateTransferMaterialRemoved": true,
+      "closedFunctionHttpStatus": 410,
+      "secretOutputLogged": false
+    },
+    "production": {
+      "modernRuntimeKeyProvisioned": true,
+      "readonlyAdminApiValidated": true,
+      "readonlyStateRpcValidated": true,
+      "emptyUserSample": 0,
+      "emptyMembershipCount": 0,
+      "privateTransferMaterialRemoved": true,
+      "closedFunctionHttpStatus": 410,
+      "secretOutputLogged": false
+    }
+  }
+}

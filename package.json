@@ -15,11 +15,11 @@
     "typecheck": "tsc -p tsconfig.client.json --noEmit",
     "test": "node --test tests/platform/*.test.mjs",
     "test:db": "node scripts/test-database.mjs",
-    "test:e2e": "node tests/platform/browser.mjs && node tests/platform/browser-chain.mjs && node tests/platform/browser-auth-boundary.mjs",
+    "test:e2e": "node tests/platform/browser.mjs && node tests/platform/browser-chain.mjs && node tests/platform/browser-auth-boundary.mjs && node tests/platform/browser-email.mjs",
     "verify": "npm run check && npm run typecheck && npm test && npm run test:ops && npm run build",
     "supabase": "supabase",
     "android:typecheck": "npm --prefix apps/android run typecheck",
-    "test:ops": "python3 -m unittest discover -s ops -p test_ops.py",
+    "test:ops": "python3 -m unittest discover -s ops -p test_ops.py && node --test ops/provision-runtime.test.mjs",
     "preview": "node scripts/local-preview.mjs"
   },
   "dependencies": {

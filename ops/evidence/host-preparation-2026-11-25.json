@@ -1,0 +1,368 @@
+{
+  "version": 1,
+  "status": "prepared-inactive-awaiting-owner-keys-and-final-ci",
+  "date": "2026-11-25",
+  "host": "dg-vps-08",
+  "adapterSha256": "e21d0552e2e7eec98b3edc42d10500a0fb8337a003e9dbd02455a4cb36ec58b5",
+  "targets": {
+    "staging": {
+      "installation": {
+        "version": 1,
+        "status": "prepared-inactive",
+        "siteId": "haagv-platform-staging",
+        "createdAt": "2026-11-23T19:41:54.044537+00:00",
+        "accounts": {
+          "runner": {
+            "name": "run-haagv-stg",
+            "uid": 978,
+            "gid": 971
+          },
+          "build": {
+            "name": "build-haagv-stg",
+            "uid": 977,
+            "gid": 970
+          },
+          "app": {
+            "name": "app-haagv-stg",
+            "uid": 976,
+            "gid": 969
+          }
+        },
+        "moduleSha256": "e21d0552e2e7eec98b3edc42d10500a0fb8337a003e9dbd02455a4cb36ec58b5",
+        "toolchainPins": {
+          "node": {
+            "version": "24.22.1",
+            "npmVersion": "11.19.1",
+            "url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz",
+            "sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+            "source": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt"
+          },
+          "runner": {
+            "version": "2.338.2",
+            "url": "https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz",
+            "sha256": "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40",
+            "source": "https://api.github.com/repos/actions/runner/releases/tags/v2.338.2"
+          }
+        },
+        "services": {
+          "haagv-platform-staging.service": {
+            "MainPID": "0",
+            "ActiveState": "inactive",
+            "SubState": "dead",
+            "UnitFileState": "disabled"
+          },
+          "haagv-platform-staging-runner.service": {
+            "MainPID": "0",
+            "ActiveState": "inactive",
+            "SubState": "dead",
+            "UnitFileState": "disabled"
+          }
+        },
+        "runnerRegistered": false,
+        "candidateExists": false,
+        "currentExists": false,
+        "proxyImported": false,
+        "dnsModified": false,
+        "sharedBuildLockModified": false,
+        "vaultKeyCreated": true,
+        "updatedAt": "2026-11-25T12:25:33.568180+00:00",
+        "operatorRoute": "root-only-ssh-approved-main"
+      },
+      "rightsAudit": {
+        "status": "passed",
+        "roles": {
+          "runner": {
+            "adapterWritable": false,
+            "unitWritable": false,
+            "releaseRootWritable": false,
+            "sharedWritable": false,
+            "buildHomeWritable": false,
+            "runnerHomeWritable": true,
+            "buildConfigReadable": false,
+            "runtimeConfigReadable": false,
+            "rawRuntimeSecretsReadable": false,
+            "vaultKeyReadable": false,
+            "otherSharedWritable": false,
+            "otherRuntimeConfigReadable": false,
+            "otherVaultKeyReadable": false
+          },
+          "build": {
+            "adapterWritable": false,
+            "unitWritable": false,
+            "releaseRootWritable": false,
+            "sharedWritable": false,
+            "buildHomeWritable": true,
+            "runnerHomeWritable": false,
+            "buildConfigReadable": true,
+            "runtimeConfigReadable": false,
+            "rawRuntimeSecretsReadable": false,
+            "vaultKeyReadable": false,
+            "otherSharedWritable": false,
+            "otherRuntimeConfigReadable": false,
+            "otherVaultKeyReadable": false
+          },
+          "app": {
+            "adapterWritable": false,
+            "unitWritable": false,
+            "releaseRootWritable": false,
+            "sharedWritable": true,
+            "buildHomeWritable": false,
+            "runnerHomeWritable": false,
+            "buildConfigReadable": false,
+            "runtimeConfigReadable": true,
+            "rawRuntimeSecretsReadable": false,
+            "vaultKeyReadable": true,
+            "otherSharedWritable": false,
+            "otherRuntimeConfigReadable": false,
+            "otherVaultKeyReadable": false
+          }
+        },
+        "generalSudoAllowed": false,
+        "crossEnvironmentAccessDenied": true,
+        "runtimeSecretFileNames": []
+      }
+    },
+    "production": {
+      "installation": {
+        "version": 1,
+        "status": "prepared-inactive",
+        "siteId": "haagv-platform-production",
+        "createdAt": "2026-11-25T12:23:11.007824+00:00",
+        "accounts": {
+          "runner": {
+            "name": "run-haagv-prd",
+            "uid": 975,
+            "gid": 968
+          },
+          "build": {
+            "name": "build-haagv-prd",
+            "uid": 974,
+            "gid": 967
+          },
+          "app": {
+            "name": "app-haagv-prd",
+            "uid": 973,
+            "gid": 966
+          }
+        },
+        "moduleSha256": "e21d0552e2e7eec98b3edc42d10500a0fb8337a003e9dbd02455a4cb36ec58b5",
+        "toolchainPins": {
+          "node": {
+            "version": "24.22.1",
+            "npmVersion": "11.19.1",
+            "url": "https://nodejs.org/dist/v24.22.1/node-v24.22.1-linux-x64.tar.xz",
+            "sha256": "6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6",
+            "source": "https://nodejs.org/dist/v24.22.1/SHASUMS256.txt"
+          },
+          "runner": {
+            "version": "2.338.2",
+            "url": "https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-linux-x64-2.338.2.tar.gz",
+            "sha256": "baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40",
+            "source": "https://api.github.com/repos/actions/runner/releases/tags/v2.338.2"
+          }
+        },
+        "services": {
+          "haagv-platform-production.service": {
+            "MainPID": "0",
+            "ActiveState": "inactive",
+            "SubState": "dead",
+            "UnitFileState": "disabled"
+          },
+          "haagv-platform-production-runner.service": {
+            "MainPID": "0",
+            "ActiveState": "inactive",
+            "SubState": "dead",
+            "UnitFileState": "disabled"
+          }
+        },
+        "runnerRegistered": false,
+        "candidateExists": false,
+        "currentExists": false,
+        "proxyImported": false,
+        "dnsModified": false,
+        "sharedBuildLockModified": false,
+        "vaultKeyCreated": true,
+        "updatedAt": "2026-11-25T12:25:34.985191+00:00",
+        "operatorRoute": "root-only-ssh-approved-main"
+      },
+      "rightsAudit": {
+        "status": "passed",
+        "roles": {
+          "runner": {
+            "adapterWritable": false,
+            "unitWritable": false,
+            "releaseRootWritable": false,
+            "sharedWritable": false,
+            "buildHomeWritable": false,
+            "runnerHomeWritable": true,
+            "buildConfigReadable": false,
+            "runtimeConfigReadable": false,
+            "rawRuntimeSecretsReadable": false,
+            "vaultKeyReadable": false,
+            "otherSharedWritable": false,
+            "otherRuntimeConfigReadable": false,
+            "otherVaultKeyReadable": false
+          },
+          "build": {
+            "adapterWritable": false,
+            "unitWritable": false,
+            "releaseRootWritable": false,
+            "sharedWritable": false,
+            "buildHomeWritable": true,
+            "runnerHomeWritable": false,
+            "buildConfigReadable": true,
+            "runtimeConfigReadable": false,
+            "rawRuntimeSecretsReadable": false,
+            "vaultKeyReadable": false,
+            "otherSharedWritable": false,
+            "otherRuntimeConfigReadable": false,
+            "otherVaultKeyReadable": false
+          },
+          "app": {
+            "adapterWritable": false,
+            "unitWritable": false,
+            "releaseRootWritable": false,
+            "sharedWritable": true,
+            "buildHomeWritable": false,
+            "runnerHomeWritable": false,
+            "buildConfigReadable": false,
+            "runtimeConfigReadable": true,
+            "rawRuntimeSecretsReadable": false,
+            "vaultKeyReadable": true,
+            "otherSharedWritable": false,
+            "otherRuntimeConfigReadable": false,
+            "otherVaultKeyReadable": false
+          }
+        },
+        "generalSudoAllowed": false,
+        "crossEnvironmentAccessDenied": true,
+        "runtimeSecretFileNames": []
+      }
+    }
+  },
+  "preservation": {
+    "status": "passed",
+    "before": "2026-11-25T12:18:43.615441+00:00",
+    "after": "2026-11-25T12:26:50.432510+00:00",
+    "checks": {
+      "proxyFiles": true,
+      "sshConfigFiles": true,
+      "sites": true,
+      "hostProfiles": true,
+      "runnerRegistrations": true,
+      "locks": true,
+      "buildLockPersistence": true,
+      "otherExistingServices": true,
+      "buildGroup": true,
+      "identity": true,
+      "knownHealth": true,
+      "existingAccounts": true
+    },
+    "details": {
+      "proxyFiles": {
+        "existingCount": 4,
+        "changedExistingPaths": []
+      },
+      "sshConfigFiles": {
+        "existingCount": 2,
+        "changedExistingPaths": []
+      },
+      "sites": {
+        "existingCount": 4,
+        "changedExistingPaths": []
+      },
+      "hostProfiles": {
+        "existingCount": 4,
+        "changedExistingPaths": []
+      },
+      "runnerRegistrations": {
+        "existingCount": 4,
+        "changedExistingPaths": []
+      },
+      "locks": {
+        "existingCount": 1,
+        "changedExistingPaths": []
+      },
+      "buildLockPersistence": {
+        "existingCount": 1,
+        "changedExistingPaths": []
+      },
+      "otherExistingServices": {
+        "existingCount": 26,
+        "changed": []
+      }
+    },
+    "capacityAfter": {
+      "cpuCount": 8,
+      "loadAverage": [
+        0.13134765625,
+        0.13623046875,
+        0.0615234375
+      ],
+      "disk": {
+        "total": 322211975168,
+        "used": 49278570496,
+        "free": 259809116160
+      },
+      "inodesTotal": 19793280,
+      "inodesFree": 18238052,
+      "memory": {
+        "MemTotal": "15982888 kB",
+        "MemAvailable": "14143312 kB",
+        "SwapTotal": "0 kB",
+        "SwapFree": "0 kB"
+      }
+    }
+  },
+  "validation": {
+    "opsTests": 34,
+    "manualWorkflowYaml": 6,
+    "pythonCompilation": "passed",
+    "visudo": "passed",
+    "systemdAnalyzeVerify": "passed",
+    "realCiClientPreflight": {
+      "status": "passed-no-host-operation",
+      "sha": "895ff4c0104d95b8c4229ba9ea3c5ec601185be4",
+      "ciRunId": 45253332335
+    }
+  },
+  "publicRouting": {
+    "origins": [
+      "https://hvcup-staging.dgwebservices.nl",
+      "https://hvcup.dgwebservices.nl"
+    ],
+    "observedDnsA": [
+      "167.235.202.206"
+    ],
+    "verifiedHostPublicIpv4": "204.168.128.28",
+    "tls": "failed-before-release",
+    "dnsModified": false,
+    "afterOwnerCorrection": {
+      "checkedAt": "2026-11-25T12:31:35.955800+00:00",
+      "authoritativeServers": [
+        "ns1.stackdns.com",
+        "ns2.stackdns.com",
+        "ns3.stackdns.com",
+        "ns4.stackdns.com"
+      ],
+      "allAuthoritativeA": "204.168.128.28",
+      "ttlSeconds": 3600,
+      "aaaaRecords": false,
+      "recursiveResolversAgree": [
+        "1.1.1.1",
+        "8.8.8.8"
+      ],
+      "oldSystemResolverCacheTtlSecondsAtCheck": 2827,
+      "tlsAfterProxyInstallation": "not-yet-tested"
+    }
+  },
+  "notPerformed": [
+    "candidate build",
+    "activation",
+    "runner registration/start",
+    "current switch",
+    "proxy import/reload",
+    "DNS change"
+  ],
+  "evidenceDirectory": "/home/codex/repos/hvcup/uitrol-platform/host"
+}

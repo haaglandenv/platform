@@ -1,0 +1,30 @@
+name: Haagv VPS08 production rollback (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Full actual previous healthy release main commit SHA
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: haagv-platform-production-release
+  cancel-in-progress: false
+jobs:
+  rollback:
+    if: github.repository == 'haaglandenv/platform' && github.ref == 'refs/heads/main'
+    environment: production
+    runs-on: [self-hosted, Linux, X64, dg-vps-08, haagv-platform-production]
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_SHA: ${{ inputs.release_sha }}
+    steps:
+      - name: restore previous healthy app/config
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +x
+          python3 -c 'import json,os; print(json.dumps({"githubToken":os.environ["GH_TOKEN"]}))' | sudo -n /usr/local/libexec/haagv-platform-production/release.py rollback --sha "$RELEASE_SHA" --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT"

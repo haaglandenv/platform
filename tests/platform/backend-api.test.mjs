@@ -353,8 +353,8 @@ test("Transactional outbox uses verified stored recipients; a delivery failure l
 test("Public build validation requires HTTPS/publishable config while runtime independently requires secret", () => {
   assert.equal(validatePublicConfig({}).dataMode, "local");
   const env = {
-    HAAGV_DATA_MODE: "supabase",
-    HAAGV_APP_ORIGIN: "https://platform.example",
+    HVCUP_DATA_MODE: "supabase",
+    HVCUP_APP_ORIGIN: "https://platform.example",
     NEXT_PUBLIC_SUPABASE_URL: "https://project.supabase.co",
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_example",
   };
@@ -364,7 +364,7 @@ test("Public build validation requires HTTPS/publishable config while runtime in
     () =>
       validatePublicConfig({
         ...env,
-        HAAGV_APP_ORIGIN: "http://platform.example",
+        HVCUP_APP_ORIGIN: "http://platform.example",
       }),
     /HTTPS/,
   );

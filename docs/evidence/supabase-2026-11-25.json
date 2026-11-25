@@ -1,0 +1,77 @@
+{
+  "checkedAt": "2026-11-25T12:27:22.075431+00:00",
+  "environments": {
+    "staging": {
+      "project": "https://wntzrrzolgnuiszudmzn.supabase.co",
+      "appOrigin": "https://hvcup-staging.dgwebservices.nl",
+      "publicApiChecks": {
+        "baseTable": {
+          "httpStatus": 401,
+          "code": "42501"
+        },
+        "stateRpc": {
+          "httpStatus": 401,
+          "code": "42501"
+        },
+        "authSettings": {
+          "httpStatus": 200,
+          "emailEnabled": true,
+          "disableSignup": false,
+          "mailerAutoconfirm": false
+        }
+      },
+      "migrations": [
+        "platform_authoritative_store",
+        "restrict_default_event_trigger"
+      ],
+      "database": "Three empty RLS-protected base tables, four server-only RPCs; zero managed memberships.",
+      "securityAdvisors": "No WARN/ERROR; three expected INFO rls_enabled_no_policy (server-only deny-all).",
+      "firstAdministratorPrepared": false,
+      "authConfiguration": {
+        "ownerConfirmed": true,
+        "templates": "Magic Link and Confirm signup",
+        "otpLength": 6,
+        "siteUrl": "Owner confirmed per-environment origin",
+        "smtp": "Owner confirmed configured",
+        "providerConfigReadback": false,
+        "realOtpDeliveryTested": false
+      }
+    },
+    "production": {
+      "project": "https://mgerzyyeuqwjdpwfdkqz.supabase.co",
+      "appOrigin": "https://hvcup.dgwebservices.nl",
+      "publicApiChecks": {
+        "baseTable": {
+          "httpStatus": 401,
+          "code": "42501"
+        },
+        "stateRpc": {
+          "httpStatus": 401,
+          "code": "42501"
+        },
+        "authSettings": {
+          "httpStatus": 200,
+          "emailEnabled": true,
+          "disableSignup": false,
+          "mailerAutoconfirm": false
+        }
+      },
+      "migrations": [
+        "platform_authoritative_store",
+        "restrict_default_event_trigger"
+      ],
+      "database": "Three empty RLS-protected base tables, four server-only RPCs; zero managed memberships.",
+      "securityAdvisors": "No WARN/ERROR; three expected INFO rls_enabled_no_policy (server-only deny-all).",
+      "firstAdministratorPrepared": false,
+      "authConfiguration": {
+        "ownerConfirmed": true,
+        "templates": "Magic Link and Confirm signup",
+        "otpLength": 6,
+        "siteUrl": "Owner confirmed per-environment origin",
+        "smtp": "Owner confirmed configured",
+        "providerConfigReadback": false,
+        "realOtpDeliveryTested": false
+      }
+    }
+  }
+}

@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      HAAGV_APP_ORIGIN: http://127.0.0.1:4175
-      HAAGV_DATA_MODE: local
+      HVCUP_APP_ORIGIN: http://127.0.0.1:4175
+      HVCUP_DATA_MODE: local
       NEXT_PUBLIC_SUPABASE_URL: ''
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ''
     steps:

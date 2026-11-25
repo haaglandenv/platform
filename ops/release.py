@@ -2,23 +2,31 @@
 """Fixed, target-specific release adapter. Credentials enter only through stdin."""
 import argparse, base64, contextlib, ctypes, datetime, fcntl, grp, hashlib, http.client, json, os, pathlib, pwd, re, shutil, signal, socket, stat, subprocess, sys, tarfile, tempfile, time, urllib.error, urllib.parse, urllib.request
 
-SITE='haagv-platform-staging'
 REPOSITORY='haaglandenv/platform'
 BRANCH='main'
 MACHINE_ID='05db94b99eca4c3d815f6585ef8ed517'
-PORT=4190
 NODE_VERSION='24.22.1'
 NPM_VERSION='11.19.1'
-USERS={'runner':'run-haagv-stg','build':'build-haagv-stg','app':'app-haagv-stg'}
-CONFIG=pathlib.Path('/etc/dg-webservices')/SITE
-ROOT=pathlib.Path('/srv/sites')/SITE
-BUILD=pathlib.Path('/var/lib/dg-build')/SITE
-INSTALL=pathlib.Path('/usr/local/libexec')/SITE
-TOOLCHAIN=pathlib.Path('/opt/dg-toolchains')/SITE/f'node-v{NODE_VERSION}-linux-x64'
-NODE=TOOLCHAIN/'bin/node'
-NPM=TOOLCHAIN/'lib/node_modules/npm/bin/npm-cli.js'
-PUBLIC_NAMES=('HAAGV_APP_ORIGIN','HAAGV_DATA_MODE','NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
-WORKFLOWS={op:f'.github/workflows/haagv-vps08-staging-{name}.yml' for op,name in [('build','candidate'),('activate','activate'),('rollback','rollback')]}
+TARGETS={
+    'staging':{'port':4190,'suffix':'stg','origin':'https://hvcup-staging.dgwebservices.nl','supabaseUrl':'https://wntzrrzolgnuiszudmzn.supabase.co'},
+    'production':{'port':4191,'suffix':'prd','origin':'https://hvcup.dgwebservices.nl','supabaseUrl':'https://mgerzyyeuqwjdpwfdkqz.supabase.co'},
+}
+PUBLIC_NAMES=('HVCUP_APP_ORIGIN','HVCUP_DATA_MODE','NEXT_PUBLIC_SUPABASE_URL','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
+
+def select_target(environment):
+    if environment not in TARGETS:raise ValueError('Unknown fixed deployment environment.')
+    global ENVIRONMENT,SITE,PORT,USERS,CONFIG,ROOT,BUILD,INSTALL,TOOLCHAIN,NODE,NPM,WORKFLOWS
+    ENVIRONMENT=environment;target=TARGETS[environment];SITE='haagv-platform-'+environment;PORT=target['port']
+    USERS={role:prefix+'-haagv-'+target['suffix'] for role,prefix in [('runner','run'),('build','build'),('app','app')]}
+    CONFIG=pathlib.Path('/etc/dg-webservices')/SITE;ROOT=pathlib.Path('/srv/sites')/SITE
+    BUILD=pathlib.Path('/var/lib/dg-build')/SITE;INSTALL=pathlib.Path('/usr/local/libexec')/SITE
+    TOOLCHAIN=pathlib.Path('/opt/dg-toolchains')/SITE/f'node-v{NODE_VERSION}-linux-x64';NODE=TOOLCHAIN/'bin/node';NPM=TOOLCHAIN/'lib/node_modules/npm/bin/npm-cli.js'
+    WORKFLOWS={op:f'.github/workflows/haagv-vps08-{environment}-{name}.yml' for op,name in [('build','candidate'),('activate','activate'),('rollback','rollback')]}
+
+# Installed privileged adapters derive their identity from their root-owned
+# location, never a caller-controlled environment variable or runtime argument.
+_installed_environment=pathlib.Path(__file__).parent.name.removeprefix('haagv-platform-')
+select_target(_installed_environment if _installed_environment in TARGETS else 'staging')
 SHA_RE=re.compile(r'[a-f0-9]{40}')
 ID_RE=re.compile(r'[a-z0-9][a-z0-9-]{0,62}')
 
@@ -39,18 +47,18 @@ def config_id(value):
 def validate_public(value):
     require(isinstance(value,dict) and set(value)==set(PUBLIC_NAMES),'Exactly the four approved public variable names are required.')
     require(all(isinstance(v,str) and '\x00' not in v and '\n' not in v and '\r' not in v and len(v)<8192 for v in value.values()),'Invalid public configuration value.')
-    origin=urllib.parse.urlsplit(value['HAAGV_APP_ORIGIN'])
-    require(origin.scheme=='https' and bool(origin.hostname) and origin.username is None and origin.password is None and origin.port is None and origin.path in ('','/') and not origin.query and not origin.fragment,'HAAGV_APP_ORIGIN must be the verified HTTPS origin without a path or port.')
+    origin=urllib.parse.urlsplit(value['HVCUP_APP_ORIGIN'])
+    require(origin.scheme=='https' and bool(origin.hostname) and origin.username is None and origin.password is None and origin.port is None and origin.path in ('','/') and not origin.query and not origin.fragment,'HVCUP_APP_ORIGIN must be the verified HTTPS origin without a path or port.')
     require(re.fullmatch(r'[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+',origin.hostname),'Invalid HTTPS hostname.')
-    require(value['HAAGV_DATA_MODE']=='supabase','A staging candidate requires supabase mode; local mode is only for development.')
+    require(value['HVCUP_DATA_MODE']=='supabase','A deployed candidate requires supabase mode; local mode is only for development.')
     url=urllib.parse.urlsplit(value['NEXT_PUBLIC_SUPABASE_URL'])
     require(url.scheme=='https' and bool(re.fullmatch(r'[a-z0-9]+\.supabase\.co',url.hostname or '')) and url.username is None and url.password is None and url.port is None and url.path in ('','/') and not url.query and not url.fragment,'Require the new, owner-confirmed Supabase HTTPS project URL.')
     require(re.fullmatch(r'sb_publishable_[A-Za-z0-9_-]{12,}',value['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY']) is not None,'Require a Supabase publishable key, never a secret/service-role key.')
     return dict(value)
 
 def normalized_public_digest(public):
-    parsed=urllib.parse.urlsplit(public['HAAGV_APP_ORIGIN'])
-    value={'origin':'https://'+parsed.hostname,'dataMode':public['HAAGV_DATA_MODE'],'supabaseUrl':public['NEXT_PUBLIC_SUPABASE_URL'],'publishableKey':public['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY']}
+    parsed=urllib.parse.urlsplit(public['HVCUP_APP_ORIGIN'])
+    value={'origin':'https://'+parsed.hostname,'dataMode':public['HVCUP_DATA_MODE'],'supabaseUrl':public['NEXT_PUBLIC_SUPABASE_URL'],'publishableKey':public['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY']}
     return sha256(json.dumps(value,separators=(',',':'),ensure_ascii=False).encode())
 
 def read_payload():
@@ -127,15 +135,16 @@ def protected_file(path,app_readable=False):
     require(stat.S_IMODE(s.st_mode) in ((0o640,) if app_readable else (0o600,0o640,0o644)),'Unsafe protected file permissions.')
     return p
 
-def host_profile():
+def host_profile(require_runner=True):
     require(os.getuid()==0,'Host release operations require their fixed sudo entrypoint.')
     require(socket.gethostname()=='dg-vps-08' and pathlib.Path('/etc/machine-id').read_text().strip()==MACHINE_ID,'Wrong target host.')
     d=json.loads(protected_file(CONFIG/'host.json').read_text())
-    expected={'siteId':SITE,'repository':REPOSITORY,'branch':BRANCH,'port':PORT,'nodeVersion':NODE_VERSION,'npmVersion':NPM_VERSION}
+    expected={'siteId':SITE,'repository':REPOSITORY,'branch':BRANCH,'environment':ENVIRONMENT,'port':PORT,'nodeVersion':NODE_VERSION,'npmVersion':NPM_VERSION,**{k:TARGETS[ENVIRONMENT][k] for k in ('origin','supabaseUrl')}}
     require(all(d.get(k)==v for k,v in expected.items()),'Host profile does not match fixed project identity.')
     for role,user in USERS.items():
         account=pwd.getpwnam(user);require(d['accounts'][role]=={'name':user,'uid':account.pw_uid,'gid':account.pw_gid},'Host account identity changed.')
     for path in (CONFIG,ROOT,INSTALL,TOOLCHAIN):trusted_path(path)
+    if not require_runner:return d
     proof_path=CONFIG/'runner-access-approved.json'
     require(proof_path.exists(),'Restricted runner access has not been proven; keep the runner unregistered and stopped.')
     proof=json.loads(protected_file(proof_path).read_text())
@@ -252,7 +261,7 @@ def runtime_snapshot(public,sha,config,profile):
     key=protected_file(CONFIG/'secrets/mail-encryption-key',True).read_text().strip()
     try:require(len(base64.b64decode(key,validate=True))==32,'Invalid mail-vault key.')
     except ValueError:raise Refusal('Invalid mail-vault key.')
-    values={**public,**secrets,'HAAGV_MAIL_ENCRYPTION_KEY':key,'HAAGV_MAIL_SETTINGS_FILE':str(ROOT/'shared/mail-settings.enc'),'HAAGV_STATE_FILE':str(ROOT/'shared/state.json'),'HAAGV_RELEASE_SHA':sha,'HAAGV_ENVIRONMENT':'staging','HAAGV_HOST':'127.0.0.1','HAAGV_PORT':str(PORT),'NODE_ENV':'production'}
+    values={**public,**secrets,'HAAGV_MAIL_ENCRYPTION_KEY':key,'HAAGV_MAIL_SETTINGS_FILE':str(ROOT/'shared/mail-settings.enc'),'HAAGV_RELEASE_SHA':sha,'HAAGV_ENVIRONMENT':ENVIRONMENT,'HAAGV_HOST':'127.0.0.1','HAAGV_PORT':str(PORT),'NODE_ENV':'production'}
     require(all(isinstance(v,str) and '\n' not in v and '\r' not in v and '\x00' not in v for v in values.values()),'Invalid runtime configuration.')
     content=''.join(k+'='+json.dumps(v,ensure_ascii=True)+'\n' for k,v in values.items()).encode()
     directory=CONFIG/'runtime-configs'/config
@@ -321,7 +330,7 @@ def seal_build(source,destination,uid,gid):
     try:
         require(os.fstat(source_fd).st_uid==uid,'Build source ownership changed.')
         names=set(os.listdir(source_fd))
-        for name in ['dist','server','node_modules','package.json','package-lock.json']:
+        for name in ['dist','server','scripts','node_modules','package.json','package-lock.json']:
             if name in names:
                 require(not stat.S_ISLNK(os.stat(name,dir_fd=source_fd,follow_symlinks=False).st_mode),'Top-level artifact symlinks are refused.')
                 copy_build_entry(source_fd,name,target_fd,uid,gid)
@@ -331,6 +340,7 @@ def seal_build(source,destination,uid,gid):
 def candidate(api,sha,config,caller,public,profile):
     deadline=time.monotonic()+2700
     public=validate_public(public);config_id(config);evidence=verify_ci(api,sha)
+    require(public['HVCUP_APP_ORIGIN'].rstrip('/')==profile['origin'] and public['NEXT_PUBLIC_SUPABASE_URL'].rstrip('/')==profile['supabaseUrl'],'Public configuration belongs to a different target environment.')
     free=shutil.disk_usage(ROOT).free;v=os.statvfs(ROOT)
     require(free>=6*1024**3 and v.f_favail>=100000,'Insufficient free disk or inodes.')
     build_gid=profile['accounts']['build']['gid'];build_uid=profile['accounts']['build']['uid'];app_gid=profile['accounts']['app']['gid']
@@ -360,14 +370,15 @@ def candidate(api,sha,config,caller,public,profile):
         destination.mkdir(mode=0o750);os.chown(destination,0,app_gid)
         digest=seal_build(source,destination/'app',build_uid,app_gid)
         require((destination/'app/dist/index.html').is_file(),'Static build output is missing.')
-        manifest={'version':1,'siteId':SITE,'repository':REPOSITORY,'environment':'staging','id':ident,'sha':sha,'configId':config,'publicConfigSha256':sha256(config_bytes),'builtPublicConfigSha256':normalized_public_digest(public),'runtimeConfig':runtime,'artifactSha256':digest,'lockfileSha256':source_lock,'nodeVersion':NODE_VERSION,'npmVersion':NPM_VERSION,'ci':evidence,'workflow':caller,'checks':checks,'createdAt':now()}
+        require((destination/'app/scripts/bootstrap-admin.mjs').is_file(),'Reviewed first-administrator bootstrap script is missing from the runtime artifact.')
+        manifest={'version':1,'siteId':SITE,'repository':REPOSITORY,'environment':ENVIRONMENT,'id':ident,'sha':sha,'configId':config,'publicConfigSha256':sha256(config_bytes),'builtPublicConfigSha256':normalized_public_digest(public),'runtimeConfig':runtime,'artifactSha256':digest,'lockfileSha256':source_lock,'nodeVersion':NODE_VERSION,'npmVersion':NPM_VERSION,'ci':evidence,'workflow':caller,'checks':checks,'createdAt':now()}
         exclusive_write(destination/'manifest.json',canonical(manifest),app_gid)
         print(json.dumps({'status':'candidate-built-inactive','candidateId':ident,'sha':sha,'configId':config,'artifactSha256':digest}))
     finally:shutil.rmtree(work)
 
 def manifest_at(directory):
     p=protected_file(directory/'manifest.json');m=json.loads(p.read_text())
-    require(m.get('siteId')==SITE and m.get('repository')==REPOSITORY and m.get('environment')=='staging','Candidate/release identity mismatch.')
+    require(m.get('siteId')==SITE and m.get('repository')==REPOSITORY and m.get('environment')==ENVIRONMENT,'Candidate/release identity mismatch.')
     full_sha(m.get('sha'));config_id(m.get('configId'))
     require(m.get('id')==directory.name,'Release identity does not match its path.')
     require(tree_digest(directory/'app')==m.get('artifactSha256'),'Artifact digest changed.')
@@ -399,7 +410,7 @@ def check_health(sha,ready=True,attempts=10):
             for endpoint in (['/api/health','/api/ready'] if ready else ['/api/health']):
                 with urllib.request.urlopen(f'http://127.0.0.1:{PORT}'+endpoint,timeout=5) as response:d=json.load(response)
                 require(d.get('ok') is True,'Health/readiness did not succeed.')
-                if endpoint=='/api/health':require(d.get('service')=='haagv' and d.get('environment')=='staging' and (d.get('sha') or d.get('releaseSha'))==sha,'Health identity/SHA mismatch.')
+                if endpoint=='/api/health':require(d.get('service')=='haagv' and d.get('environment')==ENVIRONMENT and (d.get('sha') or d.get('releaseSha'))==sha,'Health identity/SHA mismatch.')
             return
         except (Refusal,urllib.error.URLError,ValueError,TimeoutError):
             if attempt+1==attempts:raise Refusal('Own release health/readiness did not pass; recovery required.')
@@ -423,7 +434,7 @@ def activate(api,sha,ident,caller,profile):
             service('stop')
             if (ROOT/'current').is_symlink() and (ROOT/'current').resolve()==release:(ROOT/'current').unlink()
         raise
-    print(json.dumps({'status':'activated','sha':sha,'releaseId':ident,'environment':'staging'}))
+    print(json.dumps({'status':'activated','sha':sha,'releaseId':ident,'environment':ENVIRONMENT}))
 
 def rollback(api,sha,caller,profile):
     old=current_release();previous=current_release('previous');require(old is not None and previous is not None,'No previous healthy app/configuration pair exists.')
@@ -431,28 +442,39 @@ def rollback(api,sha,caller,profile):
     healthy=json.loads(protected_file(previous/'healthy.json').read_text());require(healthy.get('sha')==sha and healthy.get('runtimeConfigSha256')==m['runtimeConfig']['sha256'],'Previous release has no matching healthy proof.')
     try:pointer('current',previous);service('restart');check_health(sha)
     except BaseException:pointer('current',old);service('restart');check_health(manifest_at(old)['sha'],ready=False);raise
-    pointer('previous',old);print(json.dumps({'status':'rolled-back','sha':sha,'releaseId':previous.name,'environment':'staging'}))
+    pointer('previous',old);print(json.dumps({'status':'rolled-back','sha':sha,'releaseId':previous.name,'environment':ENVIRONMENT}))
+
+def operator_caller(operation,request_id):
+    # These operations have no matching runner sudo rule. Only the existing
+    # explicitly authorized host administrator can invoke this root entrypoint.
+    require(os.getuid()==0 and str(request_id).isdigit() and 0<int(request_id)<10**20,'Require a root administrator and a unique numeric operator request ID.')
+    return {'runId':int(request_id),'runAttempt':1,'mode':'ssh-operator','operation':operation,'repository':REPOSITORY,'branch':BRANCH,'environment':ENVIRONMENT,'requestedAt':now()}
 
 def main(supervisor_parent=None):
     parser=argparse.ArgumentParser(description=__doc__);sub=parser.add_subparsers(dest='operation',required=True)
-    for op in ['preflight','build','activate','rollback']:
+    for op in ['preflight','build','activate','rollback','operator-build','operator-activate','operator-rollback']:
         p=sub.add_parser(op);p.add_argument('--sha',required=True)
-        if op=='preflight':p.add_argument('--config-id',required=True)
-        if op!='preflight':p.add_argument('--run-id',required=True,type=int);p.add_argument('--run-attempt',required=True,type=int)
-        if op=='build':p.add_argument('--config-id',required=True)
-        if op=='activate':p.add_argument('--candidate',required=True)
+        if op=='preflight':p.add_argument('--environment',choices=TARGETS,default=ENVIRONMENT)
+        if op in ('preflight','build','operator-build'):p.add_argument('--config-id',required=True)
+        if op.startswith('operator-'):p.add_argument('--request-id',required=True)
+        elif op!='preflight':p.add_argument('--run-id',required=True,type=int);p.add_argument('--run-attempt',required=True,type=int)
+        if op in ('activate','operator-activate'):p.add_argument('--candidate',required=True)
     a=parser.parse_args();full_sha(a.sha);payload=read_payload();api=GitHub(payload['githubToken'])
     if a.operation=='preflight':
+        select_target(a.environment)
         validate_public(payload.get('publicConfig'));config_id(a.config_id);ci=verify_ci(api,a.sha);print(json.dumps({'status':'preflight-passed','sha':a.sha,'ci':ci}));return
-    require(a.run_id>0 and a.run_attempt>0,'Invalid workflow run identity.')
+    operator=a.operation.startswith('operator-');operation=a.operation.removeprefix('operator-')
+    if not operator:require(a.run_id>0 and a.run_attempt>0,'Invalid workflow run identity.')
     def cancelled(_signal,_frame):raise InterruptedError('Release operation cancelled.')
     for sig in (signal.SIGTERM,signal.SIGINT,signal.SIGHUP):signal.signal(sig,cancelled)
     require(supervisor_parent is not None and os.getppid()==supervisor_parent,'Private release supervisor parent changed.')
     require(ctypes.CDLL(None,use_errno=True).prctl(1,signal.SIGTERM,0,0,0)==0 and os.getppid()==supervisor_parent,'Cannot protect release supervisor parent death.')
-    profile=host_profile();caller=verify_caller(api,a.operation,a.run_id,a.run_attempt)
-    with lock('/run/lock/dg-build.lock' if a.operation=='build' else CONFIG/'activation.lock',shared=a.operation=='build'):
-        if a.operation=='build':candidate(api,a.sha,a.config_id,caller,payload.get('publicConfig'),profile)
-        elif a.operation=='activate':activate(api,a.sha,a.candidate,caller,profile)
+    profile=host_profile(require_runner=not operator)
+    caller=operator_caller(operation,a.request_id) if operator else verify_caller(api,operation,a.run_id,a.run_attempt)
+    if operator:verify_ci(api,a.sha)
+    with lock('/run/lock/dg-build.lock' if operation=='build' else CONFIG/'activation.lock',shared=operation=='build'):
+        if operation=='build':candidate(api,a.sha,a.config_id,caller,payload.get('publicConfig'),profile)
+        elif operation=='activate':activate(api,a.sha,a.candidate,caller,profile)
         else:rollback(api,a.sha,caller,profile)
 
 def supervised_entry():

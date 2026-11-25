@@ -19,7 +19,7 @@ concurrency:
 jobs:
   activate:
     if: github.repository == 'haaglandenv/platform' && github.ref == 'refs/heads/main'
-    environment: haagv-platform-staging
+    environment: staging
     runs-on: [self-hosted, Linux, X64, dg-vps-08, haagv-platform-staging]
     timeout-minutes: 10
     env:

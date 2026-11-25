@@ -1,123 +1,107 @@
-# Haagv staging op dg-vps-08
+# Handmatig uitrollen op dg-vps-08
 
-Deze route bereidt alleen `haagv-platform-staging` voor. Kandidaatbouw, activatie en rollback zijn drie afzonderlijke handmatige workflows. Er is geen automatische deployment bij push of PR. Bestaande Fabelpad-/CastIQ-omgevingen, runners, proxy, DNS en databases blijven buiten deze route.
+Kandidaatbouw, activeren en rollback zijn afzonderlijke handmatige opdrachten. Een push of PR activeert niets. De eigenaar heeft op 25 november 2026 de uitrol van beide eigen omgevingen geautoriseerd. De uiteindelijke kandidaat blijft gebonden aan een exacte volledige `main`-SHA met geslaagde `ci.yml`-job `verify`; runtimegeheimen en publieke bereikbaarheid worden vooraf gecontroleerd.
 
-## Vast contract
+## Twee vaste doelen
 
-| Onderdeel | Waarde |
+| Onderdeel | Staging | Productie |
+| --- | --- | --- |
+| GitHub environment | `staging` | `production` |
+| Site / runnernaam | `haagv-platform-staging` | `haagv-platform-production` |
+| Loopback | `127.0.0.1:4190` | `127.0.0.1:4191` |
+| Runner / build / app | `run-haagv-stg` / `build-haagv-stg` / `app-haagv-stg` | `run-haagv-prd` / `build-haagv-prd` / `app-haagv-prd` |
+| Vastgestelde origin | `https://hvcup-staging.dgwebservices.nl` | `https://hvcup.dgwebservices.nl` |
+| Aangewezen Supabase-project | `wntzrrzolgnuiszudmzn` | `mgerzyyeuqwjdpwfdkqz` |
+
+Repository en branch zijn `haaglandenv/platform` / `main`. Host is `dg-vps-08`, machine-id `05db94b99eca4c3d815f6585ef8ed517`. SSH gebruikt de bestaande expliciete sleutel, `HostKeyAlias=100.65.51.108` en strikte bekende-hostcontrole. Node 24.22.1 en npm 11.19.1 staan per doel in een eigen root-owned toolchain. Het appstartpunt is `npm start` → `node server/index.mjs`; systemd voert dezelfde gepinde Nodebinary direct uit.
+
+De enige vier GitHub-variabelen staan per environment: `HVCUP_APP_ORIGIN`, `HVCUP_DATA_MODE`, `NEXT_PUBLIC_SUPABASE_URL` en `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. Op beide doelen is de modus `supabase`. De workflows lezen hun eigen environment; repositoryvariabelen zijn hiervoor niet nodig. De adapter weigert een origin of Supabase-URL van de andere omgeving.
+
+## Rechten en inrichting
+
+Voor `SITE=haagv-platform-staging` of `haagv-platform-production` geldt:
+
+| Pad | Rechten / functie |
 | --- | --- |
-| Repository / integratiebranch | `haaglandenv/platform` / `main` |
-| Host / machine-id | `dg-vps-08` / `05db94b99eca4c3d815f6585ef8ed517` |
-| SSH | expliciete bestaande sleutel, `HostKeyAlias=100.65.51.108`, strict host checking |
-| Doel / runnernaam | `haagv-platform-staging` |
-| Accounts | `run-haagv-stg`, `build-haagv-stg`, `app-haagv-stg` |
-| Loopback / appservice | `127.0.0.1:4190` / `haagv-platform-staging.service` |
-| Runnerlabels | `self-hosted`, `Linux`, `X64`, `dg-vps-08`, `haagv-platform-staging` |
-| Node / npm | `24.22.1` / `11.19.1`, eigen root-owned toolchain |
-| Vereiste CI | workflow `ci.yml`, push op `main`, job `verify` op exact dezelfde SHA |
-| GitHub environment voor activering | eigen `haagv-platform-staging`; pas later aanmaken/beveiligen |
-| Gedeelde buildlock | bestaande `/run/lock/dg-build.lock`, root:dg-build 0660; bestaande tmpfiles en groepsleden behouden |
+| `/usr/local/libexec/SITE` | Root-owned vaste releaseadapter; runner/build/app kunnen niet wijzigen |
+| `/etc/dg-webservices/SITE/host.json` | Niet-geheime vaste identiteit, origin, project en toegekende UID/GID |
+| `…/build-configs/CONFIG_ID.json` | Vier publieke waarden, onveranderlijk root:build 0640 |
+| `…/runtime-secrets/CONFIG_ID.json` | Uitsluitend serverkey van dit doel, root:root 0600; directory 0700 |
+| `…/runtime-configs/CONFIG_ID/SHA.env` | Versiegebonden runtime, root:app 0640; niet leesbaar door runner/build |
+| `…/secrets/mail-encryption-key` | Per doel op de host gegenereerde base64-sleutel van 32 bytes, root:app 0640 |
+| `…/prepared/*.caddy.disabled` | Inactieve voorbereiding buiten de actieve proxy-import |
+| `/var/lib/dg-build/SITE` | Eigen buildaccount, home/cache en tijdelijke bron |
+| `/opt/actions-runner/SITE` | Eigen pakket; blijft ongeregistreerd en gestopt zonder bewezen toegangsbeperking |
+| `/opt/dg-toolchains/SITE` | Eigen gepinde root-owned Node/npm |
+| `/srv/sites/SITE/{candidates,releases}` | Verzegeld root:app; app/build/runner hebben geen schrijfrechten |
+| `…/shared` | Alleen de eigen app schrijft hier, 0700; versleutelde mailinstellingen 0600 |
 
-De runtime start met `npm start` → `node server/index.mjs`. systemd gebruikt dezelfde uitvoering direct via de gepinde Nodebinary. De Nodebuild voert de oorspronkelijke Python-build uit en bundelt de webclient. De kandidaatroute doet `npm ci --ignore-scripts --include=dev`, `npm run verify` en `npm prune --omit=dev --ignore-scripts`, met het gecommitte lockbestand. De build voert geen migraties of mail uit.
+De bestaande `/run/lock/dg-build.lock` blijft root:dg-build 0660. Bestaande tmpfilesregel en groepsleden blijven intact. De onafhankelijke root-supervisor houdt deze lock vast totdat bij afbreken de gehele buildprocesgroep is gestopt. Lockconflict geeft exitstatus 75; een workflow probeert maximaal eenmaal opnieuw na 30 seconden. Activeren en rollback gebruiken per doel een eigen exclusieve lock en releaseconcurrency.
 
-## Voorbereiding en rechten
-
-`ops/install-host.py` controleert standaard alleen de juiste host, vrije eigen namen/poort, gedeelde lock, bestaande utilities en capaciteit. `--apply` maakt uitsluitend nieuwe eigen accounts, paden, toolchain, runnerpakket, beperkte sudoers, privé-vaultkey, uitgeschakelde app-/runnerunits en een inactieve proxysnippet. Hij registreert/start geen runner, start/enabled geen app, maakt geen `current`, importeert geen proxy en wijzigt geen DNS. Bij bestaande eigen resources weigert hij; inspecteer een gedeeltelijke/eerdere installatie vóór een nieuwe poging.
-
-De beheerder gebruikt een beoordeelde root-owned bronmap buiten iedere runnercheckout:
+De installer controleert standaard alleen. `--apply` maakt uitsluitend de nieuwe vaste eigen resources; hij registreert/start geen runner of app en importeert geen proxy. Een refresh is beperkt tot een nog inactieve, ongeregistreerde eigen voorbereiding zonder kandidaten/releases; accounts, vaultkey, runtimegeheimen, toolchain en andere apps blijven behouden. De vorige eigen adapter, sudoers, hostmetadata en units worden vooraf root-only bewaard. Gebruik uitsluitend beoordeelde root-owned bron buiten de runnercheckout:
 
 ```sh
-sudo /usr/bin/python3 -I -B /root/haagv-platform-prep.XXXXXX/ops/install-host.py
-sudo /usr/bin/python3 -I -B /root/haagv-platform-prep.XXXXXX/ops/install-host.py --apply
+sudo python3 -I -B /root/BEOORDEELDE_BRON/ops/install-host.py --environment production
+sudo python3 -I -B /root/BEOORDEELDE_BRON/ops/install-host.py --environment production --apply
+sudo python3 -I -B /root/BEOORDEELDE_BRON/ops/install-host.py --environment staging --refresh --apply
 ```
 
-`ops/pins.json` bindt de officiële Node- en runnerdownloads aan SHA-256. De installer controleert de uitgepakte Node- en npmversie. De uitslag staat niet-geheim in `/etc/dg-webservices/haagv-platform-staging/installation.json`. De feitelijke uitgevoerde status staat in [deployment-status.md](deployment-status.md).
+`ops/pins.json` bindt officiële Node- en runnerdownloads aan SHA-256. De installatie-uitslag staat zonder geheimen in `…/installation.json`. De feitelijke metingen staan in [deployment-status.md](deployment-status.md).
 
-| Pad | Rechten/functie |
-| --- | --- |
-| `/usr/local/libexec/haagv-platform-staging` | root-owned adapter, geen runner/build/app-writes |
-| `/etc/dg-webservices/haagv-platform-staging/host.json` | vaste niet-geheime metadata en toegekende UID/GID |
-| `…/build-configs/CONFIG_ID.json` | onveranderlijke vier publieke waarden, root:build 0640 |
-| `…/runtime-secrets/CONFIG_ID.json` | uitsluitend serversecret van het nieuwe Supabase-project, root:root 0600 |
-| `…/runtime-configs/CONFIG_ID/SHA.env` | versiegebonden runtime, root:app 0640; build/runner kunnen niet lezen |
-| `…/secrets/mail-encryption-key` | ter plaatse gegenereerde base64-sleutel van 32 bytes, root:app 0640 |
-| `…/prepared/*.caddy.disabled` | buiten actieve proxy-import, domeinplaceholder |
-| `/var/lib/dg-build/haagv-platform-staging` | eigen buildhome/cache en werkmap |
-| `/opt/actions-runner/haagv-platform-staging` | eigen pakket, voorlopig ongeregistreerd en gestopt |
-| `/opt/dg-toolchains/haagv-platform-staging` | eigen vaste Node/npm, root-owned |
-| `/srv/sites/haagv-platform-staging/{candidates,releases}` | verzegeld, root:app, app/build/runner kunnen niet wijzigen |
-| `…/shared` | enige appschrijfmap, app 0700; versleutelde mailinstellingen worden 0600 geschreven |
+## Runtimegeheimen
 
-De runner krijgt alleen drie digestgepinde, projectspecifieke sudo-opdrachten met `NOSETENV`, vaste operaties en strikte argumenten. Hij krijgt geen algemene sudo of recht op systemctl. Elke bevoorrechte operatie valideert opnieuw host, accounts, repository, volledige SHA, `main`, vereiste CI, actuele handmatige workflowrun en exacte runnernaam. Root kopieert buildbestanden met directory-FD's en `O_NOFOLLOW` naar een afzonderlijke root-owned uitvoer; bronlinks, hardlinks en wijzigingen tijdens kopiëren worden geweigerd. De onafhankelijke root-supervisor houdt de lock vast totdat een geannuleerde buildprocesgroep volledig is gestopt. Lockconflict geeft status 75; de kandidaatworkflow probeert hoogstens eenmaal opnieuw na 30 seconden.
+Op 25 november zijn beide moderne defaultkeys op expliciet verzoek van de eigenaar automatisch geplaatst via de gekoppelde Supabase-accounts. De beoordeelde helper `ops/provision-runtime.mjs` genereert een RSA4096-privatekey en private proof uitsluitend op de VPS. De korte Supabase-handler `ops/runtime-provisioning.mjs` accepteert alleen die proof en versleutelt de moderne key voor de vastgepinde publieke VPS-sleutel, project, omgeving, transfer-ID en vervaltijd. Er is geen caller-controlled recipient of URL en geen legacyfallback. De ontvangkant valideert echte admin- en state-RPC-toegang vóór exclusieve opslag. De actieve overdrachtshandler is daarna vervangen door een vaste HTTP410-respons, en privatekey/proof zijn gewist. Een stateless handler garandeert geen eenmalig gebruik over isolates; de binding, korte geldigheid en afsluiting begrenzen deze operatie. Geen sleutelwaarde kwam in chat, Git, procesargumenten of uitvoerlogs. [Niet-geheim bewijs](evidence/runtime-provisioning-2026-11-25.json).
 
-## Vier variabelen en nog ontbrekende koppeling
-
-De enige GitHub-variabelen zijn:
-
-- `HAAGV_APP_ORIGIN`: geverifieerde HTTPS-origin van het nieuwe doel, zonder pad/poort.
-- `HAAGV_DATA_MODE`: lokaal `local`, stagingkandidaat `supabase`.
-- `NEXT_PUBLIC_SUPABASE_URL`: het door de eigenaar gekoppelde nieuwe project.
-- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: publishable key van datzelfde project.
-
-Het domein en Supabase-project zijn nog niet ingevuld. Geen waarden van andere omgevingen gebruiken. Publieke waarden worden niet in de statische bundel ingebakken, maar het buildmanifest legt de SHA-256 vast van het genormaliseerde JS-object `{origin,dataMode,supabaseUrl,publishableKey}`. De adapter vergelijkt dat digest vóór verzegeling met de vier aangeleverde waarden en bewaart daarnaast hun eigen snapshotdigest. Gewijzigde publieke waarden vereisen een nieuwe configuratie-ID en kandidaat.
-
-Runtimegeheimen gaan niet in GitHub-variabelen, procesargumenten, broncode of kandidaatbundels. Plaats voor de later gekozen `CONFIG_ID` uitsluitend dit schema in `…/runtime-secrets/CONFIG_ID.json`, root:root 0600:
+Het onderstaande schema beschrijft de beschermde opslag en blijft ook bruikbaar voor een afzonderlijke handmatige herinrichting. Bewaar voor elke omgeving uitsluitend het volgende schema in `/etc/dg-webservices/SITE/runtime-secrets/hvcup-v1.json`, root:root 0600. Gebruik de key van precies het in bovenstaande tabel aangewezen project:
 
 ```json
-{"SUPABASE_SECRET_KEY":"ALLEEN_DE_NIEUWE_PROJECTSERVERKEY"}
+{"SUPABASE_SECRET_KEY":"SERVERKEY_VAN_DIT_NIEUWE_PROJECT"}
 ```
 
-Dit voorbeeld is geen geldige of geplaatste configuratie. Gebruik een afgeschermde overdracht via stdin, zet shell tracing uit en toon de waarde niet. De installer genereert de mail-vaultsleutel op de host; de adapter leest die zelf. `HAAGV_HOST`, `HAAGV_PORT`, `HAAGV_ENVIRONMENT`, `HAAGV_RELEASE_SHA` en privé-bestandspaden zijn hostgegenereerde runtimegegevens, geen extra GitHub-variabelen. Runtimegeheimen blijven buiten de kandidaat; de release bevat een root-owned verwijzing naar de bijbehorende beschermde runtimesnapshot.
+Dit is alleen het schema; op de host staan de echte waarden onder root:root 0600, geen placeholders. Geef werkelijke waarden via een afgeschermde stdin-overdracht door, zonder shell tracing of logoutput. Geheimen gaan niet in GitHub-variabelen, broncode, procesargumenten, kandidaatbundels of uitvoerlogs. De app krijgt alleen haar beschermde runtimesnapshot. De adapter voegt de eigen vaultsleutel en `HAAGV_HOST`, `HAAGV_PORT`, `HAAGV_ENVIRONMENT`, `HAAGV_RELEASE_SHA` en mailvaultpad toe; dit zijn geen extra GitHub-variabelen.
 
-## Runner veilig vrijgeven
+De vier publieke waarden zitten niet als runtimeconfig in de statische bundel. Het buildmanifest bindt wel de SHA-256 van het genormaliseerde JS-object `{origin,dataMode,supabaseUrl,publishableKey}`. De adapter vergelijkt dit vóór verzegeling met de aangeleverde waarden en bewaart daarnaast het snapshotdigest. Een bestaande `config_id` kan niet andere waarden krijgen.
 
-Registratie/start is geblokkeerd totdat de eigen runner uitsluitend de drie beoordeelde handmatige workflows op `refs/heads/main` kan uitvoeren. Repositoryscope en labels alleen bewijzen dat niet: onbeoordeelde PR's mogen deze runner niet bereiken. Controleer daarvoor de beschikbare organisatie-/runnergroeppolicy en GitHub-planrechten. Als restricted selected-workflow-toegang niet beschikbaar is, registreer/start deze runner niet; gebruik eerst een aantoonbaar gelijkwaardige afgeschermde route.
+## Beoordeelde SSH-route
 
-Na werkelijk geverifieerde toegangsbeperking plaatst de beheerder een root-owned `runner-access-approved.json` (0600) met repository, runnernaam, policy `restricted-selected-workflows` en exact deze `workflows`:
+Er zijn geen repositoryrunners geregistreerd. De organisatie-API voor restricted selected-workflow-runnergroepen is met de beschikbare credentials niet leesbaar (403). Repositoryscope en labels bewijzen geen PR-afscherming; daarom worden de eigen runners niet geregistreerd of gestart.
 
-```text
-haaglandenv/platform/.github/workflows/haagv-vps08-staging-candidate.yml@refs/heads/main
-haaglandenv/platform/.github/workflows/haagv-vps08-staging-activate.yml@refs/heads/main
-haaglandenv/platform/.github/workflows/haagv-vps08-staging-rollback.yml@refs/heads/main
-```
-
-De unit en adapter vereisen dit bewijs. Registreer pas daarna repositoryscope `haaglandenv/platform`, naam `haagv-platform-staging` en de vaste labels, onder `run-haagv-stg`. Een kortlevend registratietoken wordt niet opgeslagen in documentatie/logs. Start uitsluitend de eigen runnerservice nadat de API dezelfde scope/naam/labels bevestigt. Deze handelingen zijn tijdens voorbereiding niet uitgevoerd.
-
-## Later kandidaat bouwen
-
-Zorg eerst dat de definitieve volledige commit-SHA in `main` staat, `ci.yml`/`verify` erop slaagt, de beveiligde eigen runner beschikbaar is, de vier nieuwe waarden zijn ingevuld en het vooraf gekozen runtimeprofiel bestaat. `CONFIG_ID` bevat 1–63 kleine letters/cijfers/streepjes en begint met letter/cijfer; het is een workflowinput, geen extra GitHub-variable. Gebruik dezelfde ID nooit voor andere waarden.
+De uitvoerbare alternatieve route gebruikt het bestaande, door de eigenaar geautoriseerde SSH-beheeraccount. `ops/ssh-release.py` leest de vier waarden uit het juiste GitHub environment, controleert exact `main`-SHA en CI, en geeft token/config alleen via SSH-stdin aan de root-owned adapter. De host herhaalt dezelfde CI-controle. De speciale `operator-*`-operaties krijgen geen sudo-regel voor de runner. Alleen de bestaande hostbeheerder kan deze root-opdrachten uitvoeren; buildcode draait vervolgens met het eigen buildaccount, zonder servergeheimen en zonder aanvullende groepen.
 
 ```sh
-gh workflow run haagv-vps08-staging-candidate.yml --repo haaglandenv/platform --ref main \
-  -f release_sha=VOLLEDIGE_GOEDGEKEURDE_MAIN_SHA -f config_id=staging-v1
-gh run list --repo haaglandenv/platform --workflow haagv-vps08-staging-candidate.yml --limit 5
-gh run watch RUN_ID --repo haaglandenv/platform --exit-status
+python3 ops/ssh-release.py candidate --environment staging --sha VOLLEDIGE_MAIN_SHA \
+  --config-id hvcup-v1 --check-only
+python3 ops/ssh-release.py candidate --environment staging --sha VOLLEDIGE_MAIN_SHA \
+  --config-id hvcup-v1
 ```
 
-Het kandidaat-ID is `SHA-RUN_ID-RUN_ATTEMPT`. Het manifest bindt die SHA aan CI-job/run/poging, de vierwaarden-snapshot, werkelijk buildmanifest, runtimesnapshot, lockfile, artefact en toolchain. Een build wisselt geen releaseverwijzing en start geen app. De huidige voorbereiding heeft geen kandidaat op de doel-VPS gemaakt.
+Gebruik voor productie exact dezelfde afzonderlijke opdracht met `--environment production`. `--check-only` verricht geen hostoperatie. Een kandidaatbuild doet `npm ci --ignore-scripts --include=dev`, `npm run verify`, `npm prune --omit=dev --ignore-scripts` en controleert dat het gecommitte lockbestand ongewijzigd is. Root kopieert met directory-FD's, `O_NOFOLLOW`, type/eigenaarschecks en wijzigingsdetectie naar een aparte onveranderlijke uitvoer. De kandidaat bevat `dist`, `server`, `scripts` (inclusief eerste-adminbootstrap), runtimeafhankelijkheden en packagebestanden; geen runtimegeheimen. Een build start geen app en wisselt geen `current`.
 
-## Later activeren en herstellen
+Het kandidaat-ID is `SHA-REQUEST_ID-1` voor SSH en `SHA-RUN_ID-RUN_ATTEMPT` voor een workflow. Het manifest bindt SHA, CI-run/poging/job, doel, configuratie, toolchain, lockfile, werkelijk buildmanifest, artefactdigest en runtimesnapshot.
 
-Een aparte expliciete releaseopdracht blijft vereist. Maak/beveilig dan uitsluitend het nieuwe GitHub environment `haagv-platform-staging`, met passende reviewers en `main`-beperking. Controleer eigen systemd-unit, runtimesnapshot, kandidaatmanifest en vrije poort opnieuw. De actieve proxy en DNS blijven hierbij nog ongemoeid.
+## Apart activeren, bootstrap en rollback
+
+Voer pas uit na de concrete succesvolle nieuwe kandidaat en de vooraf geautoriseerde releaseopdracht:
 
 ```sh
-sudo systemd-analyze verify /etc/systemd/system/haagv-platform-staging.service
-gh workflow run haagv-vps08-staging-activate.yml --repo haaglandenv/platform --ref main \
-  -f release_sha=VOLLEDIGE_KANDIDAAT_SHA -f candidate_id=EXACT_KANDIDAAT_ID
-gh run watch ACTIVATIE_RUN_ID --repo haaglandenv/platform --exit-status
+python3 ops/ssh-release.py activate --environment staging --sha VOLLEDIGE_KANDIDAAT_SHA \
+  --candidate-id EXACT_KANDIDAAT_ID
 ```
 
-Activatie en rollback gebruiken dezelfde doelconcurrency en eigen lock. De adapter wisselt alleen de eigen `current` naar app én corresponderende runtime, herstart alleen de eigen app en vereist `/api/health` met `ok=true`, service `haagv`, omgeving `staging` en exacte SHA, plus `/api/ready`. De vorige gezonde combinatie blijft als `previous` behouden. Bij een mislukte eerste installatie zonder vorige release stopt hij alleen de eigen app en verwijdert uitsluitend zijn eigen zojuist gemaakte `current`; de mislukte release blijft voor onderzoek. Een herstart na hostuitval of afgebroken workflow is geen automatisch bewezen herstel: inspecteer eigen pointers/manifesten/health eerst.
+De adapter wisselt alleen de eigen `current`, herstart alleen de eigen app en vereist `/api/health` met `ok=true`, service `haagv`, de juiste omgeving en exacte SHA, plus `/api/ready`. De vorige gezonde app/configuratiecombinatie blijft als `previous` behouden. Bij een mislukte eerste activatie zonder vorige release stopt alleen de eigen app en wordt alleen de eigen zojuist gemaakte `current` verwijderd. Een onderbroken sessie vereist inspectie van pointers/manifesten/health vóór een nieuwe opdracht.
 
-Voor rollback lees je alleen het eigen werkelijke vorige manifest en gebruik je precies die SHA:
+De beoordeelde kandidaat bevat `scripts/bootstrap-admin.mjs` en zijn imports. De beheerder kan dit als eigen appaccount met de kandidaat- of releasegebonden beschermde env uitvoeren, een beheerdersmailadres via stdin en `--confirm-empty`. De CLI controleert het lege lidmaatschapsregister, maakt precies de eerste beheerde toernooileiding via de databasefunctie en verstuurt geen mail. Gebruik dit uitsluitend op het door de eigenaar aangewezen nieuwe project en nadat de bijbehorende migraties zijn uitgevoerd. Een al gebootstrapte omgeving wordt geweigerd. Supabase OTP moet later nog het bezit van de mailbox verifiëren.
+
+Lees voor rollback de werkelijk bestaande eigen `previous/manifest.json` en gebruik precies die SHA:
 
 ```sh
-sudo python3 -I -c 'import json; p="/srv/sites/haagv-platform-staging/previous/manifest.json"; d=json.load(open(p)); print(d["sha"],d["configId"],d["id"])'
-gh workflow run haagv-vps08-staging-rollback.yml --repo haaglandenv/platform --ref main \
-  -f release_sha=VOLLEDIGE_VORIGE_GEZONDE_SHA
-gh run watch ROLLBACK_RUN_ID --repo haaglandenv/platform --exit-status
+python3 ops/ssh-release.py rollback --environment staging --sha VOLLEDIGE_VORIGE_GEZONDE_SHA
 ```
 
-De vorige runtimesnapshot moet exact overeenkomen met het gezonde bewijs. Rollback wijzigt geen database, mail/provider, DNS, proxy of bootpersistentie. Migraties zijn apart: beoordeel compatibiliteit, backup en herstel op geïsoleerde gegevens; zet geen oude app terug wanneer haar datamodel niet compatibel is.
+Een gezonde eerdere app/configuratiecombinatie is vereist. Rollback wijzigt geen database, mail/provider, DNS of proxy. Beoordeel migratiecompatibiliteit en gegevensherstel afzonderlijk.
 
-Na een gezonde loopbackrelease volgt pas de afzonderlijke publieke stap: verifieer de nieuwe origin/DNS-bestemming, render de eigen `.caddy.disabled` buiten de actieve import, valideer samen met de bestaande Caddyconfiguratie, leg bestaande health/service/proxytoestand opnieuw vast en installeer alleen de nieuwe eigen snippet na toestemming. Controleer TLS, publieke health/readiness, OTP en de belangrijkste gebruikersflow. Er wordt hier geen nieuw domein of DNS-record aangenomen.
+## GitHub-workflows en publieke route
+
+Beide omgevingen hebben afzonderlijke `haagv-vps08-ENV-candidate.yml`, `…-activate.yml` en `…-rollback.yml`, uitsluitend `workflow_dispatch`, met volledige SHA-input en minimale leesrechten. Candidate vraagt ook expliciet de vooraf geplaatste `config_id`; activate het exacte kandidaat-ID. Voor de latere runnerroute blijven een werkelijk geverifieerde restricted selected-workflows-policy, passende GitHub environmentbescherming en een root-owned `runner-access-approved.json` verplicht. De goedkeuring moet repository, exacte runnernaam, policy `restricted-selected-workflows` en uitsluitend de drie eigen workflowpaden op `@refs/heads/main` bevatten.
+
+De publieke route is een afzonderlijke stap na gezonde loopback. Dg-vps-08 heeft publiek IPv4 `204.168.128.28`. De eigenaar heeft op 25 november de eigen records gecorrigeerd: alle vier autoritatieve StackDNS-nameservers en de gecontroleerde Cloudflare-/Google-resolvers geven voor beide origins dit IPv4-adres, TTL 3600; er zijn geen AAAA-records. Lokale/VPS-resolvercaches hadden bij de nameting nog circa 47 minuten het eerdere `167.235.202.206`-antwoord. Gebruik voor tussentijdse doelcontroles een expliciete `curl --resolve` per origin, zonder gedeelde DNS-configuratie te veranderen. De eerdere TLS-fout bewijst nog geen status na proxy-inrichting. Installeer uitsluitend de nieuwe eigen Caddysnippet na gezamenlijke configuratievalidatie, met behoud van alle bestaande snippets; herlaad Caddy pas na die validatie. Controleer TLS, publieke health/readiness, OTP en de belangrijkste gebruikersflow. Leg bestaande service-PID's, health, proxies en pointers voor en na deze stap vast.

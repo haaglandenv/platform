@@ -1,6 +1,6 @@
 # Supabase, OTP en platformmail voorbereiden
 
-Deze handleiding richt een **nieuw, door de eigenaar aangewezen leeg project** in. Tijdens de ontwikkeling zijn geen bestaande gehoste Supabase-projecten gewijzigd en geen echte e-mails verzonden. De database is lokaal met een geïsoleerde PostgreSQL-container getest. Een kandidaatbuild activeren op de VPS blijft een afzonderlijke handmatige stap.
+Op 25 november 2026 heeft de eigenaar de nieuwe projecten expliciet aangewezen: **hvcup-staging** (`wntzrrzolgnuiszudmzn`, DartFlow) en **hvcup-production** (`mgerzyyeuqwjdpwfdkqz`, Duindorpdoet). Beide waren leeg: geen Auth-gebruikers, platformtabellen of migraties. De twee migraties uit deze repository zijn daarop toegepast. Andere projecten zijn niet gewijzigd. Er is geen echte e-mail verzonden. Een kandidaatbuild, activatie en rollback blijven afzonderlijke handmatige handelingen.
 
 ## Configuratie en sleutels
 
@@ -8,8 +8,8 @@ De vier GitHub-variabelen zijn uitsluitend:
 
 | Variabele | Betekenis |
 | --- | --- |
-| `HAAGV_APP_ORIGIN` | De HTTPS-origin van de betreffende omgeving, zonder URL-pad. |
-| `HAAGV_DATA_MODE` | `supabase` voor staging/productie; `local` voor lokale ontwikkeling. |
+| `HVCUP_APP_ORIGIN` | De HTTPS-origin van de betreffende omgeving, zonder URL-pad. |
+| `HVCUP_DATA_MODE` | `supabase` voor staging/productie; `local` voor lokale ontwikkeling. |
 | `NEXT_PUBLIC_SUPABASE_URL` | De HTTPS-projectorigin van het nieuwe project. |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | De publishable key van dat project (`sb_publishable_…`). |
 
@@ -20,7 +20,7 @@ De serverruntime heeft daarnaast buiten Git/GitHub/buildartefacten een `SUPABASE
 ## Lege database en migratie
 
 1. Laat de eigenaar expliciet het nieuwe project identificeren. Controleer dat dit geen bestaand project met andere toepassingen is.
-2. Voer na beoordeling de SQL in `supabase/migrations/20261123193301_platform_authoritative_store.sql` op dat nieuwe project uit, bijvoorbeeld in de SQL Editor. De migratie is lokaal gemaakt met de gepinde Supabase CLI 3.3.0. Er is geen automatische remote migration-/deployactie ingericht.
+2. Pas de bestanden onder `supabase/migrations/` in volgorde toe op dat nieuwe project. De CLI 3.3.0 heeft de bestandsnamen gegenereerd. De tweede migratie trekt publieke uitvoering van de standaard Supabase-eventtriggerhelper in, wanneer die bestaat; de eigen RLS-trigger blijft werken. Op de twee hierboven genoemde projecten is dit al uitgevoerd. Er is geen automatische migratie bij een build of activatie.
 3. De migratie maakt één lege versiecontainer, beheerde lidmaatschappen en commando-ontvangstbewijzen. Zij voegt geen voorbeeldvereniging, spelers, uitslagen of gebruikers toe.
 4. Controleer de drie tabellen `haagv_platform_state`, `haagv_memberships` en `haagv_command_receipts`: RLS aan; geen privileges voor `anon`/`authenticated`; geen clientbeleid dat toegang verleent. Alleen de serverrol kan de benodigde tabellen en RPC's gebruiken. Alle functies zijn `SECURITY INVOKER` met een vast leeg zoekpad. Directe clienttoegang tot de basisgegevens hoort te falen.
 
@@ -28,7 +28,7 @@ De server leest stateversie en beheerde lidmaatschappen in één PostgreSQL-snap
 
 ## Eenmalig eerste leidingaccount
 
-De client gebruikt `shouldCreateUser: false`. Daardoor kan een onbekend e-mailadres zich niet via de inlogknop automatisch registreren. Voor de eerste beheerder is een operatorhandeling nodig op de uitdrukkelijk gekozen lege installatie.
+De eerste beheerder is op verzoek van de eigenaar **info@dgwebservices.nl**, afzonderlijk in beide projecten. De moderne server-only sleutels staan inmiddels veilig op de VPS; het account wordt na de kandidaatbuild eenmalig voorbereid. De client gebruikt `shouldCreateUser: false`. Daardoor kan een onbekend e-mailadres zich niet via de inlogknop automatisch registreren. De eerste toekenning is een operatorhandeling op de uitdrukkelijk gekozen lege installatie.
 
 1. Configureer de serveromgeving met de vier publieke waarden en de server-secret van **dat nieuwe project**. Gebruik een besloten env-bestand buiten de repository; zet de waarden niet in CLI-argumenten.
 2. Bewaar uitsluitend het e-mailadres van de eerste beheerder tijdelijk in een besloten bestand buiten de repository (rechten `0600`).
@@ -46,7 +46,7 @@ Als een Auth-account al bestaat of een gelijktijdige bootstrap de toekenning win
 
 Supabase verzorgt de OTP-aanvraag en verificatie. De API controleert iedere ontvangen Bearer-token met `auth.getUser(jwt)` en leest de actuele rol uit de eigen beheerde tabel. Web en Android gebruiken dezelfde API en dezelfde rollen. `X-Haagv-Membership` kiest uitsluitend een eigen actief lidmaatschap.
 
-Configureer op het nieuwe Supabase-project Email Auth en de app-origin. Pas het e-mailsjabloon voor Magic Link aan zodat het de OTP-variabele `{{ .Token }}` als leesbare code toont. De clients vragen een code aan met `signInWithOtp({ email, options: { shouldCreateUser: false } })` en controleren deze met `verifyOtp({ email, token, type: 'email' })`. De standaard sjablooninstelling zou een inloglink sturen; de templatewijziging is dus noodzakelijk voor de gekozen codeflow. Zie de actuele [Supabase OTP-documentatie](https://supabase.com/docs/guides/auth/auth-email-passwordless).
+Configureer op elk nieuw Supabase-project Email Auth, de eigen HTTPS-app-origin en een OTP-lengte van **6**. Web en Android weigeren kortere of langere codes. Plaats `emails/supabase/otp.html` bij **Magic Link** en `emails/supabase/confirmation.html` bij **Confirm signup**. Beide tonen de OTP-variabele `{{ .Token }}` als leesbare code. Onderwerpen en de publicatiestappen staan in `emails/supabase/README.md`. De eigenaar heeft SMTP al gekoppeld; de beschikbare databaseconnector kan de Auth-templateconfiguratie niet publiceren. De eigenaar heeft op 25 november bevestigd dat beide templates, OTP-lengte 6 en de Site URLs al zijn ingesteld. Dit is een eigenaarsbevestiging; de connector kan deze Auth-instellingen niet uitlezen. De clients vragen een code aan met `signInWithOtp({ email, options: { shouldCreateUser: false } })` en controleren deze met `verifyOtp({ email, token, type: 'email' })`. De standaard sjablooninstelling zou een inloglink sturen; de templatewijziging is dus noodzakelijk voor de gekozen codeflow. Zie de actuele [Supabase OTP-documentatie](https://supabase.com/docs/guides/auth/auth-email-passwordless).
 
 Verifieer eerst het verzenddomein bij Resend. Stel daarna in de SMTP-instellingen van dit nieuwe Supabase-project de door Resend beschreven combinatie in: host `smtp.resend.com`, poort `465`, gebruiker `resend`, met de daarvoor bestemde Resend-sleutel als SMTP-wachtwoord. Kies de geverifieerde afzender en zichtbare organisatienaam. Bewaar deze SMTP-gegevens in Supabase, niet als frontend- of GitHub-variabele. Zie [Resend voor Supabase SMTP](https://resend.com/docs/send-with-supabase-smtp) en [Supabase custom SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
 
@@ -54,7 +54,9 @@ Een gecontroleerde liveproef met een eigenaar/beheerder moet nog bewijzen dat de
 
 ## Overige platformmail via Resend API
 
-De OTP-mail blijft gescheiden van platformmeldingen. De toernooileiding beheert via **Mailinstellingen** de Resend API-sleutel, afzender en antwoordadres. `GET /api/v1/admin/mail-settings` toont uitsluitend de gemaskeerde status; een sleutel kan worden vervangen of verwijderd en wordt nooit teruggelezen. De server bewaart het materiaal met AES-256-GCM en een runtimeversleutelingssleutel. Er is een expliciete beheeractie voor een testmail.
+De toernooileiding beheert via **Instellingen → Mailinstellingen** de Resend API-sleutel, afzender en antwoordadres. `GET /api/v1/admin/mail-settings` toont uitsluitend de gemaskeerde status; een sleutel kan worden vervangen of verwijderd en wordt nooit teruggelezen. De server bewaart het materiaal met AES-256-GCM en een runtimeversleutelingssleutel. Er is een expliciete beheeractie voor een testmail.
+
+Onder **E-mailtemplates** zijn acht templates te bewerken: inlogcode, accountbevestiging, testmail, bericht, aanstelling, teaminschrijving, wedstrijdplanning en bezwaarbesluit. Iedere template heeft een onderwerp, HTML en gewone tekst, een eigen lijst toegestane shortcodes, voorbeeldweergave, versiecontrole en herstel naar standaard. De server valideert HTML en vervangt tekstwaarden met escaping. Wijzigingen en een begrensd auditlog staan versleuteld in dezelfde private kluis. Resend-meldingen gebruiken de opgeslagen templates direct. De twee Auth-templates hebben een aparte export: opslaan of exporteren publiceert niet bij Supabase. Er is geen route om een OTP via Resend API te versturen.
 
 Domeincommando's voor berichten, aanstellingen, inschrijvingsbeoordeling, planning en bezwaarbesluiten schrijven waar er beheerde ontvangers zijn een transactioneel uitgaand record. Dit record bevat gebruikers-ID's, geen door een client vrij gekozen mailadressen. De server zoekt het geverifieerde adres via Auth op en verwerkt de melding met een vaste idempotentiesleutel. De status `accepted` betekent dat Resend de aanvraag accepteerde; zij bewijst geen bezorging in een inbox. Zonder instellingen of geverifieerd adres blijft de melding `pending`. Een verzendprobleem maakt een reeds opgeslagen sportief besluit niet ongedaan.
 
@@ -72,4 +74,4 @@ npm run build
 
 De databasetest start en verwijdert uitsluitend zijn eigen Docker-container `haagv-platform-validation-<procesnummer>` op een geïsoleerd netwerk zonder gepubliceerde poorten. Andere lokale Supabase-projecten blijven buiten deze tests. Getest zijn onder meer clientweigering/RLS, foutieve foreign keys met volledige rollback, één succesvolle schrijver bij een CAS-race en eenmalige eerste-roltoekenning. Bij de tijdelijke bare-Postgres-test is geen Supabase CLI-stack geregistreerd; beveiligingscataloguscontroles in de SQL-suite vormen het lokale bewijs, geen gehost advisorrapport.
 
-Voor daadwerkelijke stagingvrijgave blijven projectidentificatie, externe OTP-/mailproef, runtime-secretplaatsing, back-up/herstel en de aparte handmatige kandidaat-/activatie-/rollbackprocedure op de VPS nodig. `/api/health` toont de release-identiteit; `/api/ready` controleert de gegevensopslag. Ontbrekende platformmail wordt als niet ingericht getoond en krijgt geen fictieve successtatus.
+Voor publieke vrijgave volgen nog de eerste-accountbootstrap en de eigen HTTPS-proxy. De moderne server-only sleutels zijn al automatisch geplaatst en gevalideerd; zie `evidence/runtime-provisioning-2026-11-25.json`. De eigenaar heeft de DNS-records inmiddels naar de juiste VPS gezet; de autoritatieve nameservers bevestigen dit. Daarna volgen de afzonderlijke handmatige kandidaat-/activatiehandelingen en een gecontroleerde echte OTP-proef. Beide Supabase-projecten zijn geïdentificeerd, gemigreerd en via de echte publieke API gecontroleerd: basisgegevens en server-RPC geven HTTP 401/42501 voor de publishable key. De security advisor heeft geen WARN/ERROR; de drie INFO-meldingen over RLS zonder beleid zijn het beoogde deny-all ontwerp. Zie `docs/evidence/supabase-2026-11-25.json` en `deployment-status.md`. `/api/health` toont de release-identiteit; `/api/ready` controleert de gegevensopslag. Ontbrekende platformmail wordt als niet ingericht getoond en krijgt geen fictieve successtatus.

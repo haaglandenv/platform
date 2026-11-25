@@ -243,7 +243,7 @@ export default function App() {
                       autoComplete="one-time-code"
                       value={code}
                       onChangeText={setCode}
-                      maxLength={10}
+                      maxLength={6}
                       placeholder="Inlogcode"
                       style={styles.input}
                     />
@@ -263,7 +263,7 @@ export default function App() {
                           setCode("");
                           await refresh();
                         }),
-                      !/^\d{6,10}$/.test(code),
+                      !/^\d{6}$/.test(code),
                     )}
                   </>
                 )}

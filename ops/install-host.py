@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""Add only Haagv staging resources. Default is a read-only preflight."""
+"""Prepare one fixed Haagv environment. Default is a read-only preflight."""
 import argparse, base64, contextlib, fcntl, grp, hashlib, importlib.util, json, os, pathlib, pwd, shutil, socket, stat, subprocess, sys, tarfile, tempfile, urllib.request
 
 HERE=pathlib.Path(__file__).resolve().parent
 spec=importlib.util.spec_from_file_location('haagv_release',HERE/'release.py');release=importlib.util.module_from_spec(spec);spec.loader.exec_module(release)
-SITE=release.SITE
-PATHS=[release.CONFIG,release.ROOT,release.BUILD,release.INSTALL,release.TOOLCHAIN.parent,pathlib.Path('/opt/actions-runner')/SITE]
 UNIT_ROOT=pathlib.Path('/etc/systemd/system')
-SUDO=pathlib.Path('/etc/sudoers.d')/SITE
-RUNNER=pathlib.Path('/opt/actions-runner')/SITE
+
+def select_target(environment):
+ global SITE,PATHS,SUDO,RUNNER
+ release.select_target(environment);SITE=release.SITE
+ PATHS=[release.CONFIG,release.ROOT,release.BUILD,release.INSTALL,release.TOOLCHAIN.parent,pathlib.Path('/opt/actions-runner')/SITE]
+ SUDO=pathlib.Path('/etc/sudoers.d')/SITE;RUNNER=pathlib.Path('/opt/actions-runner')/SITE
+
+select_target('staging')
 
 
 def run(argv):
@@ -20,23 +24,25 @@ def run(argv):
 def absent(path):return not pathlib.Path(path).exists() and not pathlib.Path(path).is_symlink()
 
 
-def source_check():
+def source_check(refresh=False):
  release.require(os.getuid()==0,'Use the verified host administration account with sudo.')
  release.require(socket.gethostname()=='dg-vps-08' and pathlib.Path('/etc/machine-id').read_text().strip()==release.MACHINE_ID,'Wrong target host.')
  for file in ['install-host.py','release.py','pins.json']:
   p=release.trusted_path(HERE/file);release.require(p.is_file(),'Reviewed source file missing.')
  pins=json.loads((HERE/'pins.json').read_text())
  release.require(pins['node']['version']==release.NODE_VERSION and pins['node']['npmVersion']==release.NPM_VERSION and pins['runner']['version']=='2.338.2','Unexpected toolchain pins.')
- for role,user in release.USERS.items():
-  try:pwd.getpwnam(user)
-  except KeyError:pass
-  else:raise release.Refusal('Target account exists; inspect own partial/existing setup before continuing: '+user)
-  try:grp.getgrnam(user)
-  except KeyError:pass
-  else:raise release.Refusal('Target group exists; no existing identity will be reused.')
- for path in [*PATHS,SUDO,UNIT_ROOT/(SITE+'.service'),UNIT_ROOT/(SITE+'-runner.service')]:release.require(absent(path),'Target path already exists: '+str(path))
+ if refresh:refresh_check()
+ else:
+  for role,user in release.USERS.items():
+   try:pwd.getpwnam(user)
+   except KeyError:pass
+   else:raise release.Refusal('Target account exists; inspect own partial/existing setup before continuing: '+user)
+   try:grp.getgrnam(user)
+   except KeyError:pass
+   else:raise release.Refusal('Target group exists; no existing identity will be reused.')
+  for path in [*PATHS,SUDO,UNIT_ROOT/(SITE+'.service'),UNIT_ROOT/(SITE+'-runner.service')]:release.require(absent(path),'Target path already exists: '+str(path))
  for p in pathlib.Path('/etc/dg-webservices').glob('*/host.json'):
-  data=json.loads(p.read_text(encoding='utf-8-sig'));release.require(data.get('port')!=release.PORT,'Target port is reserved by another host profile.')
+  data=json.loads(p.read_text(encoding='utf-8-sig'));release.require(data.get('port')!=release.PORT or refresh and p==release.CONFIG/'host.json','Target port is reserved by another host profile.')
  with socket.socket() as probe:
   probe.bind(('127.0.0.1',release.PORT))
  lock=pathlib.Path('/run/lock/dg-build.lock');s=lock.lstat()
@@ -68,7 +74,7 @@ def write(path,text,gid=0,mode=0o644):release.exclusive_write(path,text.encode()
 
 def unit_text():
  return f'''[Unit]
-Description=Haaglanden Voetbal staging
+Description=Haaglanden Voetbal {release.ENVIRONMENT}
 After=network-online.target
 Wants=network-online.target
 ConditionPathExists={release.ROOT}/current/runtime.env
@@ -101,7 +107,7 @@ WantedBy=multi-user.target
 
 def runner_unit():
  return f'''[Unit]
-Description=Haaglanden Voetbal staging repository runner
+Description=Haaglanden Voetbal {release.ENVIRONMENT} repository runner
 After=network-online.target
 Wants=network-online.target
 ConditionPathExists={RUNNER}/.runner
@@ -132,7 +138,7 @@ def sudo_text(digest):
 
 
 def prepare(pins):
- with tempfile.TemporaryDirectory(prefix='haagv-staging-packages-',dir='/root') as temp:
+ with tempfile.TemporaryDirectory(prefix=SITE+'-packages-',dir='/root') as temp:
   temp=pathlib.Path(temp)
   download(pins['node'],temp/'node.tar.xz');download(pins['runner'],temp/'runner.tar.gz')
   unpack(temp/'node.tar.xz',temp/'node');unpack(temp/'runner.tar.gz',temp/'runner')
@@ -166,7 +172,7 @@ def prepare(pins):
    for p in [RUNNER,*RUNNER.rglob('*')]:
     if p.is_symlink():os.lchown(p,runner['uid'],runner['gid'])
     else:os.chown(p,runner['uid'],runner['gid'])
-   profile={'version':1,'siteId':SITE,'repository':release.REPOSITORY,'branch':release.BRANCH,'hostname':'dg-vps-08','machineId':release.MACHINE_ID,'environment':'staging','port':release.PORT,'accounts':accounts,'nodeVersion':release.NODE_VERSION,'npmVersion':release.NPM_VERSION,'runnerName':SITE,'runnerLabels':['self-hosted','Linux','X64','dg-vps-08',SITE],'requiredCiWorkflow':'ci.yml','requiredCiJobs':['verify'],'sharedBuildLock':'/run/lock/dg-build.lock','activationLock':str(release.CONFIG/'activation.lock')}
+   profile={'version':2,'siteId':SITE,'repository':release.REPOSITORY,'branch':release.BRANCH,'hostname':'dg-vps-08','machineId':release.MACHINE_ID,'environment':release.ENVIRONMENT,'port':release.PORT,'accounts':accounts,'nodeVersion':release.NODE_VERSION,'npmVersion':release.NPM_VERSION,'runnerName':SITE,'runnerLabels':['self-hosted','Linux','X64','dg-vps-08',SITE],'requiredCiWorkflow':'ci.yml','requiredCiJobs':['verify'],'sharedBuildLock':'/run/lock/dg-build.lock','activationLock':str(release.CONFIG/'activation.lock'),**{k:release.TARGETS[release.ENVIRONMENT][k] for k in ('origin','supabaseUrl')}}
    write(release.CONFIG/'host.json',json.dumps(profile,indent=2)+'\n')
    release.exclusive_write(release.CONFIG/'activation.lock',b'',mode=0o600)
    release.exclusive_write(release.CONFIG/'secrets/mail-encryption-key',base64.b64encode(os.urandom(32))+b'\n',app['gid'],0o640)
@@ -198,10 +204,58 @@ __VERIFIED_HAAGV_DOMAIN__ {{
    print(json.dumps(proof))
 
 
+def refresh_check():
+ for path in [release.CONFIG,release.ROOT,release.INSTALL,release.TOOLCHAIN]:release.trusted_path(path)
+ profile=json.loads(release.protected_file(release.CONFIG/'host.json').read_text())
+ release.require(profile.get('siteId')==SITE and profile.get('repository')==release.REPOSITORY and profile.get('port')==release.PORT and profile.get('environment')==release.ENVIRONMENT,'Existing own profile has a different identity.')
+ for role,user in release.USERS.items():
+  account=pwd.getpwnam(user);release.require(profile['accounts'][role]=={'name':user,'uid':account.pw_uid,'gid':account.pw_gid},'Own account identity changed.')
+ for name in [SITE+'.service',SITE+'-runner.service']:
+  fields=dict(line.split('=',1) for line in run(['/usr/bin/systemctl','show',name,'--property=ActiveState,SubState,UnitFileState,MainPID']).splitlines() if '=' in line)
+  release.require(fields=={'MainPID':'0','ActiveState':'inactive','SubState':'dead','UnitFileState':'disabled'},'Refresh is limited to the still inactive own preparation.')
+ release.require(absent(release.ROOT/'current') and absent(release.ROOT/'previous') and absent(RUNNER/'.runner'),'Do not refresh an activated or registered target.')
+ release.require(not any((release.ROOT/'candidates').iterdir()) and not any((release.ROOT/'releases').iterdir()),'Existing artifacts need a separate reviewed adapter upgrade.')
+ installation=json.loads(release.protected_file(release.CONFIG/'installation.json').read_text())
+ adapter=release.trusted_path(release.INSTALL/'release.py');release.require(adapter.is_file() and adapter.stat().st_nlink==1 and hashlib.sha256(adapter.read_bytes()).hexdigest()==installation['moduleSha256'],'Existing adapter does not match its preparation proof.')
+ release.require(run([str(release.NODE),'--version'])=='v'+release.NODE_VERSION,'Existing own Node version changed.')
+ release.require(run([str(release.NODE),str(release.NPM),'--version'])==release.NPM_VERSION,'Existing own npm version changed.')
+ return profile,installation
+
+def replace_file(path,data,mode=0o644):
+ release.trusted_path(path);release.require(path.is_file() and path.stat().st_nlink==1,'Only an existing protected regular file can be refreshed.')
+ temporary=path.with_name('.'+path.name+'-'+str(os.getpid()))
+ release.exclusive_write(temporary,data,mode=mode);os.replace(temporary,path)
+
+def refresh(pins):
+ with release.lock('/run/lock/dg-build.lock',shared=True),release.lock(release.CONFIG/'activation.lock'):
+  source_check(refresh=True);profile,installation=refresh_check()
+  profile.update(version=2,**{k:release.TARGETS[release.ENVIRONMENT][k] for k in ('origin','supabaseUrl')})
+  adapter=(HERE/'release.py').read_bytes();policy=sudo_text(hashlib.sha256(adapter).hexdigest())
+  with tempfile.TemporaryDirectory(prefix=SITE+'-refresh-',dir='/root') as temporary:
+   temporary=pathlib.Path(temporary);(temporary/'sudoers').write_text(policy);(temporary/'sudoers').chmod(0o440)
+   (temporary/(SITE+'.service')).write_text(unit_text());(temporary/(SITE+'-runner.service')).write_text(runner_unit())
+   run(['/usr/sbin/visudo','-cf',str(temporary/'sudoers')])
+   run(['/usr/bin/systemd-analyze','verify',str(temporary/(SITE+'.service')),str(temporary/(SITE+'-runner.service'))])
+   changes=[(release.INSTALL/'release.py',adapter,0o755),(SUDO,policy.encode(),0o440),(release.CONFIG/'host.json',(json.dumps(profile,indent=2)+'\n').encode(),0o644),(UNIT_ROOT/(SITE+'.service'),unit_text().encode(),0o644),(UNIT_ROOT/(SITE+'-runner.service'),runner_unit().encode(),0o644)]
+   backups=[(path,path.read_bytes(),stat.S_IMODE(path.stat().st_mode)) for path,_,_ in changes]
+   history=release.CONFIG/'history';history.mkdir(mode=0o700,exist_ok=True);release.trusted_path(history)
+   stamp=str(__import__('time').time_ns())
+   for index,(path,data,mode) in enumerate(backups):release.exclusive_write(history/f'{stamp}-{index}-{path.name}',data,mode=0o600)
+   try:
+    for path,data,mode in changes:replace_file(path,data,mode)
+    run(['/usr/bin/systemctl','daemon-reload'])
+    installation.update(updatedAt=release.now(),moduleSha256=hashlib.sha256(adapter).hexdigest(),operatorRoute='root-only-ssh-approved-main',toolchainPins=pins)
+    replace_file(release.CONFIG/'installation.json',(json.dumps(installation,indent=2)+'\n').encode())
+   except BaseException:
+    for path,data,mode in backups:replace_file(path,data,mode)
+    run(['/usr/bin/systemctl','daemon-reload']);raise
+   refresh_check();print(json.dumps(installation))
+
 def main():
- p=argparse.ArgumentParser(description=__doc__);p.add_argument('--apply',action='store_true');a=p.parse_args();pins=source_check()
+ p=argparse.ArgumentParser(description=__doc__);p.add_argument('--environment',required=True,choices=release.TARGETS);p.add_argument('--apply',action='store_true');p.add_argument('--refresh',action='store_true');a=p.parse_args();select_target(a.environment);pins=source_check(refresh=a.refresh)
  if not a.apply:print(json.dumps({'status':'preflight-passed-no-changes','siteId':SITE,'port':release.PORT,'accounts':release.USERS}));return
- prepare(pins)
+ if a.refresh:refresh(pins)
+ else:prepare(pins)
 
 if __name__=='__main__':
  try:main()

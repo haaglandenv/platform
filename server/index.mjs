@@ -5,6 +5,7 @@ import { pathToFileURL } from "node:url";
 import { readConfig } from "./config.mjs";
 import { createStore } from "./store.mjs";
 import { createAuth } from "./auth.mjs";
+import { MAIL_TEMPLATE_CATALOG, templateItem, renderTemplate, exportAuthTemplate } from "./mail-templates.mjs";
 import {
   actorFor,
   projectBootstrap,
@@ -64,6 +65,14 @@ function requireLeader(actor) {
     );
 }
 const unconfiguredMail = {
+  getTemplates: async () => MAIL_TEMPLATE_CATALOG.map((item) => ({ ...templateItem(item.id), configured: item.type === "resend-api" ? false : null })),
+  getTemplate: async (id) => templateItem(id),
+  getTemplateAudit: async () => [],
+  renderTemplate: async (id, input = {}) => renderTemplate(id, input.subject !== undefined || input.html !== undefined || input.text !== undefined ? input : templateItem(id), input.values),
+  exportTemplate: async (id) => exportAuthTemplate(id, templateItem(id)),
+  updateTemplate: async () => fail("MAIL_ENCRYPTION_UNAVAILABLE", "Stel eerst de serverversleuteling voor mailinstellingen in.", 503),
+  resetTemplate: async () => fail("MAIL_ENCRYPTION_UNAVAILABLE", "Stel eerst de serverversleuteling voor mailinstellingen in.", 503),
+  testTemplate: async () => fail("MAIL_NOT_CONFIGURED", "De servermailconfiguratie is nog niet ingericht.", 503),
   getSettings: async () => ({
     configured: false,
     enabled: false,
@@ -137,6 +146,8 @@ export async function createApplication({
             to,
             subject: row.subject,
             text: row.text,
+            templateId: row.templateId,
+            values: row.templateValues,
           });
           statuses.push({
             userId,
@@ -307,6 +318,36 @@ export async function createApplication({
               ),
             });
         }
+        if (url.pathname === "/api/v1/admin/mail-templates" && req.method === "GET") {
+          requireLeader(actor);
+          return send(res, 200, { ok: true, items: await mailService.getTemplates() });
+        }
+        if (url.pathname === "/api/v1/admin/mail-templates/audit" && req.method === "GET") {
+          requireLeader(actor);
+          return send(res, 200, { ok: true, items: await mailService.getTemplateAudit() });
+        }
+        const templateRoute = /^\/api\/v1\/admin\/mail-templates\/([a-z.]+)(?:\/(reset|render|test|export))?$/.exec(url.pathname);
+        if (templateRoute) {
+          requireLeader(actor);
+          const [, id, action] = templateRoute;
+          if (!action && req.method === "GET")
+            return send(res, 200, { ok: true, item: await mailService.getTemplate(id) });
+          if (!action && req.method === "PUT")
+            return send(res, 200, { ok: true, item: await mailService.updateTemplate(id, await body(req, config.bodyLimit), { user: actor.user }) });
+          if (action === "reset" && req.method === "POST")
+            return send(res, 200, { ok: true, item: await mailService.resetTemplate(id, await body(req, config.bodyLimit), { user: actor.user }) });
+          if (action === "render" && req.method === "POST")
+            return send(res, 200, { ok: true, preview: await mailService.renderTemplate(id, await body(req, config.bodyLimit)) });
+          if (action === "export" && req.method === "GET")
+            return send(res, 200, { ok: true, ...await mailService.exportTemplate(id) });
+          if (action === "test" && req.method === "POST") {
+            const input = await body(req, config.bodyLimit);
+            if (!input || typeof input !== "object" || Array.isArray(input) || Object.keys(input).some((key) => !["to", "requestId"].includes(key)))
+              fail("VALIDATION", "Mailtest bevat onbekende velden.");
+            return send(res, 200, { ok: true, ...await mailService.testTemplate(id, { ...input, user: actor.user }) });
+          }
+          fail("METHOD_NOT_ALLOWED", "Deze methode is niet beschikbaar voor de e-mailtemplate.", 405);
+        }
         if (
           url.pathname === "/api/v1/admin/mail-test" &&
           req.method === "POST"
@@ -440,6 +481,7 @@ export async function start(options = {}) {
         process.env.HAAGV_MAIL_SETTINGS_FILE ||
         resolve(config.root, ".local/mail-settings.json"),
       encryptionKey: process.env.HAAGV_MAIL_ENCRYPTION_KEY,
+      appOrigin: config.origin,
       enabled: config.dataMode === "supabase",
     });
   }

@@ -3,7 +3,7 @@ import copy, fcntl, importlib.util, io, json, os, pathlib, signal, subprocess, s
 from unittest.mock import patch
 spec=importlib.util.spec_from_file_location('ops_release',pathlib.Path(__file__).with_name('release.py'));r=importlib.util.module_from_spec(spec);spec.loader.exec_module(r)
 SHA='a'*40
-PUBLIC={'HAAGV_APP_ORIGIN':'https://staging.example.invalid','HAAGV_DATA_MODE':'supabase','NEXT_PUBLIC_SUPABASE_URL':'https://syntheticexample.supabase.co','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY':'sb_publishable_'+'a'*24}
+PUBLIC={'HVCUP_APP_ORIGIN':'https://staging.example.invalid','HVCUP_DATA_MODE':'supabase','NEXT_PUBLIC_SUPABASE_URL':'https://syntheticexample.supabase.co','NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY':'sb_publishable_'+'a'*24}
 class API:
  def __init__(self):
   self.compare={'status':'ahead','merge_base_commit':{'sha':SHA}}
@@ -25,11 +25,11 @@ class ConfigTests(unittest.TestCase):
    data=PUBLIC|{key:value}
    with self.subTest(key=key),self.assertRaises(r.Refusal):r.validate_public(data)
  def test_missing_placeholder_and_local_target_refused(self):
-  for data in [{},PUBLIC|{'HAAGV_APP_ORIGIN':''},PUBLIC|{'HAAGV_DATA_MODE':'local'},PUBLIC|{'NEXT_PUBLIC_SUPABASE_URL':'http://127.0.0.1:54321'}]:
-   with self.subTest(dataMode=data.get('HAAGV_DATA_MODE')),self.assertRaises(r.Refusal):r.validate_public(data)
+  for data in [{},PUBLIC|{'HVCUP_APP_ORIGIN':''},PUBLIC|{'HVCUP_DATA_MODE':'local'},PUBLIC|{'NEXT_PUBLIC_SUPABASE_URL':'http://127.0.0.1:54321'}]:
+   with self.subTest(dataMode=data.get('HVCUP_DATA_MODE')),self.assertRaises(r.Refusal):r.validate_public(data)
  def test_origin_injection_and_credentials_refused(self):
   for origin in ['https://user:pass@example.invalid','https://example.invalid/path','https://example.invalid:443','https://example.invalid/?x=1','https://example.invalid\nINJECT=1']:
-   with self.subTest(origin=origin),self.assertRaises(r.Refusal):r.validate_public(PUBLIC|{'HAAGV_APP_ORIGIN':origin})
+   with self.subTest(origin=origin),self.assertRaises(r.Refusal):r.validate_public(PUBLIC|{'HVCUP_APP_ORIGIN':origin})
  def test_full_sha_and_configuration_id_boundaries(self):
   self.assertEqual(r.full_sha(SHA),SHA)
   for sha in ['a'*7,'A'*40,'a'*40+';id','main']:
@@ -40,7 +40,7 @@ class ConfigTests(unittest.TestCase):
   import hashlib
   normalized={'origin':'https://staging.example.invalid','dataMode':'supabase','supabaseUrl':PUBLIC['NEXT_PUBLIC_SUPABASE_URL'],'publishableKey':PUBLIC['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY']}
   expected=hashlib.sha256(json.dumps(normalized,separators=(',',':')).encode()).hexdigest()
-  self.assertEqual(r.normalized_public_digest(PUBLIC|{'HAAGV_APP_ORIGIN':'https://staging.example.invalid/'}),expected)
+  self.assertEqual(r.normalized_public_digest(PUBLIC|{'HVCUP_APP_ORIGIN':'https://staging.example.invalid/'}),expected)
 class GateTests(unittest.TestCase):
  def test_exact_success_evidence(self):self.assertEqual(r.verify_ci(API(),SHA)['jobId'],20)
  def test_nonancestor_refused(self):
@@ -71,6 +71,37 @@ class GateTests(unittest.TestCase):
    with self.subTest(key=key),self.assertRaises(r.Refusal):r.verify_caller(api,'build',99,1)
   api=API();api.active[0]['runner_name']='existing-production'
   with self.assertRaises(r.Refusal):r.verify_caller(api,'build',99,1)
+class EnvironmentTests(unittest.TestCase):
+ def tearDown(self):r.select_target('staging')
+ def test_production_has_distinct_fixed_accounts_paths_and_port(self):
+  staging=(r.SITE,r.PORT,set(r.USERS.values()),r.CONFIG,r.ROOT,r.BUILD,r.TOOLCHAIN)
+  r.select_target('production')
+  self.assertEqual(r.PORT,4191);self.assertEqual(r.SITE,'haagv-platform-production')
+  self.assertTrue(set(r.USERS.values()).isdisjoint(staging[2]))
+  for old,new in zip(staging[3:],(r.CONFIG,r.ROOT,r.BUILD,r.TOOLCHAIN)):self.assertNotEqual(old,new)
+  self.assertIn('production-candidate.yml',r.WORKFLOWS['build'])
+  with self.assertRaises(ValueError):r.select_target('../../another-app')
+ def test_other_environment_public_values_rejected_before_filesystem_work(self):
+  profile={'origin':'https://other.example.invalid','supabaseUrl':PUBLIC['NEXT_PUBLIC_SUPABASE_URL']}
+  with patch.object(r,'verify_ci'),self.assertRaisesRegex(r.Refusal,'different target environment'):r.candidate(API(),SHA,'test',{},PUBLIC,profile)
+ def test_operator_requires_root_and_unique_bounded_numeric_request(self):
+  with patch.object(r.os,'getuid',return_value=123),self.assertRaises(r.Refusal):r.operator_caller('build','123')
+  with patch.object(r.os,'getuid',return_value=0):
+   for value in ['0','-1','abc','1;id','1'*21]:
+    with self.subTest(value=value),self.assertRaises(r.Refusal):r.operator_caller('build',value)
+   self.assertEqual(r.operator_caller('build','123')['mode'],'ssh-operator')
+ def test_runner_sudo_does_not_authorize_operator_operations(self):
+  text=pathlib.Path(__file__).with_name('install-host.py').read_text()
+  policy=text.split('def sudo_text(digest):',1)[1].split('def prepare(',1)[0]
+  self.assertNotIn('operator-',policy);self.assertIn('^build --sha',policy)
+ def test_both_workflow_families_read_their_github_environment(self):
+  root=pathlib.Path(__file__).parents[1]/'.github/workflows'
+  for environment in ['staging','production']:
+   for operation in ['candidate','activate','rollback']:
+    text=(root/f'haagv-vps08-{environment}-{operation}.yml').read_text()
+    self.assertIn('environment: '+environment,text);self.assertIn('workflow_dispatch:',text)
+    self.assertNotIn('\n  push:',text);self.assertNotIn('\n  pull_request:',text)
+    self.assertNotIn('vars.HAAGV_',text)
 class FilesystemTests(unittest.TestCase):
  def test_source_archive_traversal_and_links_refused(self):
   with tempfile.TemporaryDirectory() as temp:
@@ -118,6 +149,11 @@ class FilesystemTests(unittest.TestCase):
    p=pathlib.Path(temp);source=p/'source';source.mkdir();(source/'server').mkdir();(source/'server/index.mjs').write_text('approved')
    with patch.object(r.os,'chown'),patch.object(r.os,'fchown'):digest=r.seal_build(source,p/'sealed',os.getuid(),os.getgid())
    (source/'server/index.mjs').write_text('changed');self.assertEqual((p/'sealed/server/index.mjs').read_text(),'approved');self.assertEqual(r.tree_digest(p/'sealed'),digest)
+ def test_fd_sealing_includes_reviewed_bootstrap_without_secrets(self):
+  with tempfile.TemporaryDirectory() as temp:
+   p=pathlib.Path(temp);source=p/'source';source.mkdir();(source/'scripts').mkdir();(source/'scripts/bootstrap-admin.mjs').write_text('reviewed bootstrap');(source/'.env').write_text('synthetic private value')
+   with patch.object(r.os,'chown'),patch.object(r.os,'fchown'):r.seal_build(source,p/'sealed',os.getuid(),os.getgid())
+   self.assertEqual((p/'sealed/scripts/bootstrap-admin.mjs').read_text(),'reviewed bootstrap');self.assertFalse((p/'sealed/.env').exists())
 class RecoveryTests(unittest.TestCase):
  def test_first_activation_failure_removes_only_own_new_current(self):
   with tempfile.TemporaryDirectory() as temp:
